@@ -22,10 +22,6 @@ public class MacroIndicators {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "stock_id", nullable = false)
-    private Stock stock;
-
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     @Column(name = "date", nullable = false)
     private LocalDate date;
@@ -42,8 +38,7 @@ public class MacroIndicators {
     protected MacroIndicators() {
     }
 
-    private MacroIndicators(Stock stock, LocalDate date, String disclaimer, String content, Long userId) {
-        this.stock = stock;
+    private MacroIndicators(LocalDate date, String disclaimer, String content, Long userId) {
         this.date = date;
         this.disclaimer = disclaimer;
         this.content = content;
@@ -51,11 +46,10 @@ public class MacroIndicators {
     }
 
     @Builder
-    public static MacroIndicators create(Stock stock, LocalDate date, String disclaimer, String content,
+    public static MacroIndicators create(LocalDate date, String disclaimer, String content,
         Long userId) {
 
         return MacroIndicators.builder()
-            .stock(stock)
             .date(date)
             .disclaimer(disclaimer)
             .content(content)

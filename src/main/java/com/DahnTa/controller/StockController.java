@@ -1,10 +1,13 @@
 package com.DahnTa.controller;
 
 import com.DahnTa.dto.response.StockListResponse;
+import com.DahnTa.dto.response.StockOrderResponse;
+import com.DahnTa.dto.response.StockResponse;
 import com.DahnTa.service.StockService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -27,8 +30,22 @@ public class StockController {
     }
 
     @GetMapping
-    public ResponseEntity<StockListResponse> getStockListResponse() {
-        StockListResponse response = stockService.getStockListResponse();
+    public ResponseEntity<StockListResponse> getStockList() {
+        StockListResponse response = stockService.getStockList();
+
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<StockResponse> getStock(@PathVariable(name = "id") Long stockId) {
+        StockResponse response = stockService.getStock(stockId);
+
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @GetMapping("/{id}/order")
+    public ResponseEntity<StockOrderResponse> getStockOrder(@PathVariable(name = "id") Long stockId) {
+        StockOrderResponse response = stockService.getStockOrder(stockId);
 
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
