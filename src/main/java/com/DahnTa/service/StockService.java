@@ -3,10 +3,12 @@ package com.DahnTa.service;
 import com.DahnTa.dto.DashBoard;
 import com.DahnTa.dto.MarketPrices;
 import com.DahnTa.dto.response.StockListResponse;
+import com.DahnTa.dto.response.StockNewsResponse;
 import com.DahnTa.dto.response.StockOrderResponse;
 import com.DahnTa.dto.response.StockResponse;
 import com.DahnTa.entity.CurrentPrice;
 import com.DahnTa.entity.GameDate;
+import com.DahnTa.entity.News;
 import com.DahnTa.entity.Possession;
 import com.DahnTa.entity.Stock;
 import com.DahnTa.repository.CompanyFinanceRepository;
@@ -111,6 +113,15 @@ public class StockService {
 
         return StockOrderResponse.create(quantity, ,
             currentPrice.calculateAvailableOrderAmount(user.getUserCredit));
+    }
+
+    public StockNewsResponse getStockNews(Long stockId) {
+        Stock stock = getStockByStockId(stockId);
+        LocalDate today = getToday(user);
+
+        News news = newsRepository.findByStockAndDate(stock, today);
+
+        return StockNewsResponse.create(news.getDate(), news.getDisclaimer(), news.getContent());
     }
 
     private void setGameInformation(User user, LocalDate randomStart, LocalDate randomEnd) {

@@ -1,6 +1,7 @@
 package com.DahnTa.controller;
 
 import com.DahnTa.dto.response.StockListResponse;
+import com.DahnTa.dto.response.StockNewsResponse;
 import com.DahnTa.dto.response.StockOrderResponse;
 import com.DahnTa.dto.response.StockResponse;
 import com.DahnTa.service.StockService;
@@ -46,6 +47,13 @@ public class StockController {
     @GetMapping("/{id}/order")
     public ResponseEntity<StockOrderResponse> getStockOrder(@PathVariable(name = "id") Long stockId) {
         StockOrderResponse response = stockService.getStockOrder(stockId);
+
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @GetMapping("/{id}/news")
+    public ResponseEntity<StockNewsResponse> getStockNesw(@PathVariable(name = "id") Long stockId) {
+        StockNewsResponse response = stockService.getStockNews(stockId);
 
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
