@@ -1,31 +1,53 @@
 package com.DahnTa.service;
 
-import com.DahnTa.dto.AuthDTO;
-import com.DahnTa.entity.Auth;
+import com.DahnTa.dto.Auth.LoginRequestDTO;
+import com.DahnTa.dto.Auth.LoginResponseDTO;
+import com.DahnTa.dto.Auth.SignUpRequestDTO;
+import com.DahnTa.entity.User;
 import com.DahnTa.repository.AuthRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class AuthService {
-    @Autowired
-    private static AuthRepository authRepository;
+    private AuthRepository authRepository;
+    private JWTService jwtService;
 
-    public static void signupUser(AuthDTO authDTO) {
-         Auth authEntity = toEntity(authDTO);
-         authRepository.save(authEntity);
+    public AuthService(AuthRepository authRepository, JWTService jwtService) {
+        this.authRepository = authRepository;
+        this.jwtService = jwtService;
     }
 
 
-    public static void authenticateToken(AuthDTO authDTO) {
-
+    public void signupUser(SignUpRequestDTO signUpRequestDTO) {
+         User userEntity = toEntity(signUpRequestDTO);
+         authRepository.save(userEntity);
     }
+
+
+    public LoginResponseDTO authenticateToken(LoginRequestDTO loginRequestDTO) {
+        User user = authRepository.findByUserAccount(loginRequestDTO.getUserAccount())
+            .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // password 검증 로직
+        if (!user.getUserPassword().equals(loginRequestDTO.getUserPassword())) {
+            throw new RuntimeException("Password incorrect");
+        }
+
+        String accessToken = jwtService.generateAccessToken(user.getUserAccount(), user.getId());
+        String refreshToken = jwtService.generateRefreshToken(user.getId());
+
+        jwtService.saveToken(user, refreshToken);
+
+        return new LoginResponseDTO(accessToken, refreshToken);
+    }
+
 
     // dto to entity
-    private static Auth toEntity(AuthDTO authDTO) {
-         Auth authEntity = new Auth(authDTO.getId(), authDTO.getUserAccount(), authDTO.getUserPassword(),
-             authDTO.getUserNickName(), authDTO.getUserCredit(), authDTO.getUserProfileImageUrl());
-        return authEntity;
+    // @todo : builder pattern으로 개선 필요
+    private User toEntity(SignUpRequestDTO signUpRequestDTO) {
+        // @todo : password 암호화하여 저장 필요..?
+         User userEntity = new User(signUpRequestDTO.getUserAccount(), signUpRequestDTO.getUserPassword(),
+             signUpRequestDTO.getUserNickName(), signUpRequestDTO.getUserCredit(), signUpRequestDTO.getUserProfileImageUrl());
+        return userEntity;
     }
-
 }
