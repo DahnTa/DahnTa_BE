@@ -62,4 +62,12 @@ public class CurrentPrice {
             .userId(userId)
             .build();
     }
+
+    public double calculateChangeRate(CurrentPrice previous) {
+        return ((double) (this.currentPrice - previous.currentPrice) / previous.currentPrice) * 100.0;
+    }
+
+    public int calculateChangeAmount(CurrentPrice previous) {
+        return this.currentPrice - previous.currentPrice;
+    }
 }

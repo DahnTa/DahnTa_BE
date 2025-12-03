@@ -2,6 +2,7 @@ package com.DahnTa.service;
 
 import com.DahnTa.dto.DashBoard;
 import com.DahnTa.dto.response.StockListResponse;
+import com.DahnTa.dto.response.StockResponse;
 import com.DahnTa.entity.CurrentPrice;
 import com.DahnTa.entity.GameDate;
 import com.DahnTa.entity.Stock;
@@ -63,7 +64,7 @@ public class StockService {
         setGameInformation(user, randomStart, randomEnd);
     }
 
-    public StockListResponse getStockListResponse() {
+    public StockListResponse getStockList() {
         List<Stock> stocks = stockRepository.findAll();
 
         GameDate gameDate = gameDateRepository.findByUser(user);
@@ -84,6 +85,12 @@ public class StockService {
         return StockListResponse.create(dashBoards);
     }
 
+    public StockResponse getStock(Long stockId) {
+        Stock stock = getStockByStockId(stockId);
+
+
+    }
+
     private void setGameInformation(User user, LocalDate randomStart, LocalDate randomEnd) {
         csvLoadUtil.loadCsvForCurrentPrice(user, randomStart, randomEnd);
         csvLoadUtil.loadCsvForNews(user, randomStart, randomEnd);
@@ -93,15 +100,17 @@ public class StockService {
 
     private double getChangeRate(Stock stock, CurrentPrice currentPrice, LocalDate date) {
         CurrentPrice yesterdayPrice = currentPriceRepository.findByStockAndDate(stock, date.minusDays(1));
-        double today = currentPrice.getCurrentPrice();
-        double yesterday = yesterdayPrice.getCurrentPrice();
-
-        return ((today - yesterday) / yesterday) * 100.0;
+        return currentPrice.calculateChangeRate(yesterdayPrice);
     }
 
     private int getChangeAmount(Stock stock, CurrentPrice currentPrice, LocalDate date) {
         CurrentPrice yesterdayPrice = currentPriceRepository.findByStockAndDate(stock, date.minusDays(1));
+        return currentPrice.calculateChangeAmount(yesterdayPrice);
+    }
 
-        return currentPrice.getCurrentPrice() - yesterdayPrice.getCurrentPrice();
+    private Stock getStockByStockId(Long stockId) {
+
+        return stockRepository.findById(stockId)
+            .orElseThrow(() -> new IllegalArgumentException("해당 id의 stock을 찾을 수 없습니다."));
     }
 }
