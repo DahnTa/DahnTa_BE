@@ -1,21 +1,19 @@
-package com.DahnTa.dto;
+package com.DahnTa.dto.Auth;
 
-public class AuthDTO {
+public class SignUpRequestDTO {
     private Long id;
     private String userAccount;
     private String userPassword;
     private int userCredit;
+
+    // @todo : 기본 닉과, 유저 프로필 필요
+    // 기본 닉은 그냥 아이디
     private String userNickName;
     private String userProfileImageUrl;
 
-    // ID & paawd 변경 생성자
-    public AuthDTO(String userPassword, String userAccount) {
-        this.userPassword = userPassword;
-        this.userAccount = userAccount;
-    }
 
     // 기본 생성자
-    public AuthDTO(Long id, String userAccount, String userPassword, int userCredit,
+    public SignUpRequestDTO(Long id, String userAccount, String userPassword, int userCredit,
         String userNickName, String userProfileImageUrl) {
         this.id = id;
         this.userAccount = userAccount;
@@ -25,8 +23,31 @@ public class AuthDTO {
         this.userProfileImageUrl = userProfileImageUrl;
     }
 
+    public Long getId() {
+        return id;
+    }
 
-    // setter
+    public String getUserAccount() {
+        return userAccount;
+    }
+
+    public String getUserPassword() {
+        return userPassword;
+    }
+
+    public int getUserCredit() {
+        return userCredit;
+    }
+
+    public String getUserNickName() {
+        return userNickName;
+    }
+
+    public String getUserProfileImageUrl() {
+        return userProfileImageUrl;
+    }
+
+
     public void setId(Long id) {
         this.id = id;
     }
@@ -51,32 +72,6 @@ public class AuthDTO {
         this.userProfileImageUrl = userProfileImageUrl;
     }
 
-
-
-    // getter
-    public Long getId() {
-        return id;
-    }
-
-    public String getUserAccount() {
-        return userAccount;
-    }
-
-    public String getUserPassword() {
-        return userPassword;
-    }
-
-    public int getUserCredit() {
-        return userCredit;
-    }
-
-    public String getUserNickName() {
-        return userNickName;
-    }
-
-    public String getUserProfileImageUrl() {
-        return userProfileImageUrl;
-    }
 
 
 
