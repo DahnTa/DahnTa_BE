@@ -1,6 +1,7 @@
 package com.DahnTa.service;
 
 import com.DahnTa.dto.DashBoard;
+import com.DahnTa.dto.MarketPrices;
 import com.DahnTa.dto.response.StockListResponse;
 import com.DahnTa.dto.response.StockResponse;
 import com.DahnTa.entity.CurrentPrice;
@@ -66,19 +67,14 @@ public class StockService {
 
     public StockListResponse getStockList() {
         List<Stock> stocks = stockRepository.findAll();
-
-        GameDate gameDate = gameDateRepository.findByUser(user);
-        int day = gameDate.getDay();
-        LocalDate startDate = gameDate.getStartDate();
-        LocalDate currentDate = startDate.plusDays(day);
+        LocalDate today = getToday(user);
 
         List<DashBoard> dashBoards = new ArrayList<>();
         for (Stock stock : stocks) {
-            CurrentPrice currentPrice = currentPriceRepository.findByStockAndDate(stock, currentDate);
+            CurrentPrice currentPrice = currentPriceRepository.findByStockAndDate(stock, today);
             DashBoard board = DashBoard.create(stock.getId(), stock.getStockName(), stock.getStockTag(),
                 currentPrice.getCurrentPrice(), currentPrice.getMarketPrice(),
-                getChangeRate(stock, currentPrice, currentDate),
-                getChangeAmount(stock, currentPrice, currentDate));
+                getChangeRate(stock, currentPrice, today), getChangeAmount(stock, currentPrice, today));
             dashBoards.add(board);
         }
 
@@ -87,8 +83,13 @@ public class StockService {
 
     public StockResponse getStock(Long stockId) {
         Stock stock = getStockByStockId(stockId);
+        LocalDate today = getToday(user);
+        CurrentPrice currentPrice = currentPriceRepository.findByStockAndDate(stock, today);
+        GameDate gameDate = getGameDateByUser(user);
+        List<MarketPrices> marketPrices = getMarketPricesUntilToday(stock, gameDate.getStartDate(), today);
 
-
+        return StockResponse.create(stock.getStockName(), stock.getStockTag(), marketPrices,
+            currentPrice.getCurrentPrice(), getChangeRate(stock, currentPrice, today));
     }
 
     private void setGameInformation(User user, LocalDate randomStart, LocalDate randomEnd) {
@@ -108,9 +109,34 @@ public class StockService {
         return currentPrice.calculateChangeAmount(yesterdayPrice);
     }
 
+    private LocalDate getToday(User user) {
+        GameDate gameDate = getGameDateByUser(user);
+        int day = gameDate.getDay() ;
+        LocalDate startDate = gameDate.getStartDate();
+
+        return startDate.plusDays(day + 10);
+    }
+
+    private List<MarketPrices> getMarketPricesUntilToday(Stock stock, LocalDate startDate, LocalDate today) {
+        List<MarketPrices> marketPrices = new ArrayList<>();
+
+        for (LocalDate date = startDate; !date.isAfter(today); date = date.plusDays(1)) {
+            CurrentPrice currentPrice = currentPriceRepository.findByStockAndDate(stock, date);
+            marketPrices.add(MarketPrices.create(currentPrice.getMarketPrice()));
+        }
+
+        return marketPrices;
+    }
+
     private Stock getStockByStockId(Long stockId) {
 
         return stockRepository.findById(stockId)
             .orElseThrow(() -> new IllegalArgumentException("해당 id의 stock을 찾을 수 없습니다."));
+    }
+
+    private GameDate getGameDateByUser(User user) {
+
+        return gameDateRepository.findByUser(user)
+            .orElseThrow(() -> new IllegalArgumentException("해당 user의 GameDate를 찾을 수 없습니다."));
     }
 }
