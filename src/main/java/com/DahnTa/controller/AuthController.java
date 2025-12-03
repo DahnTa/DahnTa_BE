@@ -1,30 +1,33 @@
 package com.DahnTa.controller;
 
-import com.DahnTa.dto.AuthDTO;
+import com.DahnTa.dto.Auth.LoginRequestDTO;
+import com.DahnTa.dto.Auth.LoginResponseDTO;
+import com.DahnTa.dto.Auth.SignUpRequestDTO;
 import com.DahnTa.service.AuthService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@RestController("/api/auth")
+@RestController
+@RequiredArgsConstructor
+@RequestMapping("/api/auth")
 public class AuthController {
-
-    @Autowired
-    private static AuthService authService;
+    private final AuthService authService;
 
     @PostMapping("/signup")
-    public static ResponseEntity<?> registerUser(@RequestBody AuthDTO authDTO) {
-         authService.signupUser(authDTO);
+    public ResponseEntity<?> registerUser(@RequestBody SignUpRequestDTO signUpRequestDTO) {
+         authService.signupUser(signUpRequestDTO);
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
     @PostMapping("/login")
-    public static void loginUser(@RequestBody AuthDTO authDTO) {
-       AuthDTO responseDTO = authService.authenticateToken(authDTO);
-
+    public ResponseEntity<LoginResponseDTO> loginUser(@RequestBody LoginRequestDTO loginRequestDTO) {
+       LoginResponseDTO responseDTO = authService.authenticateToken(loginRequestDTO);
+        return ResponseEntity.ok().body(responseDTO);
     }
 
     @PostMapping("/password")
