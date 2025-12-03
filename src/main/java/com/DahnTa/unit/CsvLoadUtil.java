@@ -24,9 +24,7 @@ import org.springframework.stereotype.Component;
 public class CsvLoadUtil {
 
     private static final List<String> STOCK_NAMES = Arrays.asList(
-        "마이크로소프트", "메타", "버크셔 해서웨이", "브로드컴",
-        "아마존", "알파벳", "애플", "엔비디아", "월마트", "테슬라"
-    );
+        "마이크로소프트", "메타", "버크셔 해서웨이", "브로드컴", "아마존", "알파벳", "애플", "엔비디아", "월마트", "테슬라");
 
     private final StockRepository stockRepository;
     private final CurrentPriceRepository currentPriceRepository;

@@ -2,6 +2,7 @@ package com.DahnTa.service;
 
 import com.DahnTa.dto.DashBoard;
 import com.DahnTa.dto.MarketPrices;
+import com.DahnTa.dto.response.MacroIndicatorsResponse;
 import com.DahnTa.dto.response.StockCompanyFinanceResponse;
 import com.DahnTa.dto.response.StockListResponse;
 import com.DahnTa.dto.response.StockNewsResponse;
@@ -10,6 +11,7 @@ import com.DahnTa.dto.response.StockResponse;
 import com.DahnTa.entity.CompanyFinance;
 import com.DahnTa.entity.CurrentPrice;
 import com.DahnTa.entity.GameDate;
+import com.DahnTa.entity.MacroIndicators;
 import com.DahnTa.entity.News;
 import com.DahnTa.entity.Possession;
 import com.DahnTa.entity.Stock;
@@ -134,6 +136,15 @@ public class StockService {
 
         return StockCompanyFinanceResponse.create(companyFinance.getDate(), companyFinance.getDisclaimer(),
             companyFinance.getContent());
+    }
+
+    public MacroIndicatorsResponse getMacroIndicators() {
+        LocalDate today = getToday(user);
+
+        MacroIndicators macroIndicators = macroIndicatorsRepository.findByDate(today);
+
+        return MacroIndicatorsResponse.create(macroIndicators.getDate(), macroIndicators.getDisclaimer(),
+            macroIndicators.getContent());
     }
 
     private void setGameInformation(User user, LocalDate randomStart, LocalDate randomEnd) {

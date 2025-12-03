@@ -1,12 +1,12 @@
 package com.DahnTa.controller;
 
+import com.DahnTa.dto.response.MacroIndicatorsResponse;
 import com.DahnTa.dto.response.StockCompanyFinanceResponse;
 import com.DahnTa.dto.response.StockListResponse;
 import com.DahnTa.dto.response.StockNewsResponse;
 import com.DahnTa.dto.response.StockOrderResponse;
 import com.DahnTa.dto.response.StockResponse;
 import com.DahnTa.service.StockService;
-import org.apache.coyote.Response;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -64,6 +64,13 @@ public class StockController {
     public ResponseEntity<StockCompanyFinanceResponse> getStockCompanyFinance(
         @PathVariable(name = "id") Long stockId) {
         StockCompanyFinanceResponse response = stockService.getStockCompanyFinance(stockId);
+
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @GetMapping("/macro")
+    public ResponseEntity<MacroIndicatorsResponse> getMacroIndicators() {
+        MacroIndicatorsResponse response = stockService.getMacroIndicators();
 
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
