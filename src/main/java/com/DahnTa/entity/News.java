@@ -30,14 +30,11 @@ public class News {
     @Column(name = "date", nullable = false)
     private LocalDate date;
 
-    @Column(name = "title", nullable = false)
-    private String title;
+    @Column(name = "disclaimer", nullable = false)
+    private String disclaimer;
 
     @Column(name = "content", nullable = false)
     private String content;
-
-    @Column(name = "keyword", nullable = false)
-    private String keyword;
 
     @Column(name = "user_id", nullable = false)
     private Long userId;
@@ -45,25 +42,23 @@ public class News {
     protected News() {
     }
 
-    private News(Stock stock, LocalDate date, String title, String content, String keyword, Long userId) {
+    private News(Stock stock, LocalDate date, String disclaimer, String content, Long userId) {
         this.stock = stock;
         this.date = date;
-        this.title = title;
+        this.disclaimer = disclaimer;
         this.content = content;
-        this.keyword = keyword;
         this.userId = userId;
     }
 
     @Builder
-    public static News create(Stock stock, LocalDate date, String title, String content, String keyword,
+    public static News create(Stock stock, LocalDate date, String disclaimer, String content,
         Long userId) {
 
         return News.builder()
             .stock(stock)
             .date(date)
-            .title(title)
+            .disclaimer(disclaimer)
             .content(content)
-            .keyword(keyword)
             .userId(userId)
             .build();
     }
