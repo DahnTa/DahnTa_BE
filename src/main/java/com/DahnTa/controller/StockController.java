@@ -1,6 +1,7 @@
 package com.DahnTa.controller;
 
 import com.DahnTa.dto.response.StockListResponse;
+import com.DahnTa.dto.response.StockOrderResponse;
 import com.DahnTa.dto.response.StockResponse;
 import com.DahnTa.service.StockService;
 import org.springframework.http.HttpStatus;
@@ -36,8 +37,15 @@ public class StockController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<StockResponse> getStockByStockId(@PathVariable(name = "id") Long stockId) {
+    public ResponseEntity<StockResponse> getStock(@PathVariable(name = "id") Long stockId) {
         StockResponse response = stockService.getStock(stockId);
+
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @GetMapping("/{id}/order")
+    public ResponseEntity<StockOrderResponse> getStockOrder(@PathVariable(name = "id") Long stockId) {
+        StockOrderResponse response = stockService.getStockOrder(stockId);
 
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }

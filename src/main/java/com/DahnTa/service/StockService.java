@@ -3,15 +3,18 @@ package com.DahnTa.service;
 import com.DahnTa.dto.DashBoard;
 import com.DahnTa.dto.MarketPrices;
 import com.DahnTa.dto.response.StockListResponse;
+import com.DahnTa.dto.response.StockOrderResponse;
 import com.DahnTa.dto.response.StockResponse;
 import com.DahnTa.entity.CurrentPrice;
 import com.DahnTa.entity.GameDate;
+import com.DahnTa.entity.Possession;
 import com.DahnTa.entity.Stock;
 import com.DahnTa.repository.CompanyFinanceRepository;
 import com.DahnTa.repository.CurrentPriceRepository;
 import com.DahnTa.repository.GameDateRepository;
 import com.DahnTa.repository.MacroIndicatorsRepository;
 import com.DahnTa.repository.NewsRepository;
+import com.DahnTa.repository.PossessionRepository;
 import com.DahnTa.repository.RedditRepository;
 import com.DahnTa.repository.StockRepository;
 import com.DahnTa.unit.CsvLoadUtil;
@@ -27,6 +30,7 @@ public class StockService {
 
     private final GameDateRepository gameDateRepository;
     private final StockRepository stockRepository;
+    private final PossessionRepository possessionRepository;
     private final CurrentPriceRepository currentPriceRepository;
     private final CompanyFinanceRepository companyFinanceRepository;
     private final MacroIndicatorsRepository macroIndicatorsRepository;
@@ -35,11 +39,13 @@ public class StockService {
     private final CsvLoadUtil csvLoadUtil;
 
     public StockService(GameDateRepository gameDateRepository, StockRepository stockRepository,
-        CurrentPriceRepository currentPriceRepository, CompanyFinanceRepository companyFinanceRepository,
+        PossessionRepository possessionRepository, CurrentPriceRepository currentPriceRepository,
+        CompanyFinanceRepository companyFinanceRepository,
         MacroIndicatorsRepository macroIndicatorsRepository, NewsRepository newsRepository,
         RedditRepository redditRepository, CsvLoadUtil csvLoadUtil) {
         this.gameDateRepository = gameDateRepository;
         this.stockRepository = stockRepository;
+        this.possessionRepository = possessionRepository;
         this.currentPriceRepository = currentPriceRepository;
         this.companyFinanceRepository = companyFinanceRepository;
         this.macroIndicatorsRepository = macroIndicatorsRepository;
@@ -92,6 +98,21 @@ public class StockService {
             currentPrice.getCurrentPrice(), getChangeRate(stock, currentPrice, today));
     }
 
+    public StockOrderResponse getStockOrder(Long stockId) {
+        int quantity = 0;
+        Stock stock = getStockByStockId(stockId);
+        Possession possession = getPossessionByStockAndUser(stock, user);
+        if (possession != null) {
+            quantity = possession.getQuantity();
+        }
+
+        LocalDate today = getToday(user);
+        CurrentPrice currentPrice = currentPriceRepository.findByStockAndDate(stock, today);
+
+        return StockOrderResponse.create(quantity, ,
+            currentPrice.calculateAvailableOrderAmount(user.getUserCredit));
+    }
+
     private void setGameInformation(User user, LocalDate randomStart, LocalDate randomEnd) {
         csvLoadUtil.loadCsvForCurrentPrice(user, randomStart, randomEnd);
         csvLoadUtil.loadCsvForNews(user, randomStart, randomEnd);
@@ -111,7 +132,7 @@ public class StockService {
 
     private LocalDate getToday(User user) {
         GameDate gameDate = getGameDateByUser(user);
-        int day = gameDate.getDay() ;
+        int day = gameDate.getDay();
         LocalDate startDate = gameDate.getStartDate();
 
         return startDate.plusDays(day + 10);
@@ -138,5 +159,11 @@ public class StockService {
 
         return gameDateRepository.findByUser(user)
             .orElseThrow(() -> new IllegalArgumentException("해당 user의 GameDate를 찾을 수 없습니다."));
+    }
+
+    private Possession getPossessionByStockAndUser(Stock stock, User user) {
+
+        return possessionRepository.findByStockAndUser(stock, user)
+            .orElse(null);
     }
 }
