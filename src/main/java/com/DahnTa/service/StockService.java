@@ -86,7 +86,9 @@ public class StockService {
 
     private void setGameInformation(User user, LocalDate randomStart, LocalDate randomEnd) {
         csvLoadUtil.loadCsvForCurrentPrice(user, randomStart, randomEnd);
-
+        csvLoadUtil.loadCsvForNews(user, randomStart, randomEnd);
+        csvLoadUtil.loadCsvForMacroIndicators(user, randomStart, randomEnd);
+        csvLoadUtil.loadCsvForCompanyFinance(user, randomStart, randomEnd);
     }
 
     private double getChangeRate(Stock stock, CurrentPrice currentPrice, LocalDate date) {
