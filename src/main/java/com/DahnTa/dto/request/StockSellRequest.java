@@ -1,5 +1,15 @@
 package com.DahnTa.dto.request;
 
-public record StockSellRequest(int quantity) {
+import lombok.Getter;
 
+@Getter
+public class StockSellRequest {
+
+    private int quantity;
+
+    protected StockSellRequest() {}
+
+    public StockSellRequest(int quantity) {
+        this.quantity = quantity;
+    }
 }

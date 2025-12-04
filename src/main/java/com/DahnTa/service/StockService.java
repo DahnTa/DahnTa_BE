@@ -93,22 +93,26 @@ public class StockService {
         gameDate.updateDay();
     }
 
+    public void gameFinish() {
+
+    }
+
     public void stockBuy(Long stockId, StockBuyRequest request) {
         Stock stock = getStockByStockId(stockId);
         LocalDate today = getToday(user);
         CurrentPrice currentPrice = getCurrentPriceByStockAndDate(stock, today);
 
-        currentPrice.validateBuyQuantity(user.getUserCredit, request.quantity());
+        currentPrice.validateBuyQuantity(user.getUserCredit, request.getQuantity());
 
         Possession possession = getPossessionByStockAndUser(stock, user);
         if (possession == null) {
             possession = Possession.create(stock, user, 0);
             possessionRepository.save(possession);
         }
-        possession.increaseQuantity(request.quantity());
+        possession.increaseQuantity(request.getQuantity());
 
         /*
-        user.deductCredit(currentPrice.getCurrentPrice*request.quantity());
+        user.deductCredit(currentPrice.getCurrentPrice*request.getQuantity());
         ┎─────────────────────────────────────────────┐
             User 도메인에 작성 ↓
             public void deductCredit(int amount) {
@@ -126,16 +130,16 @@ public class StockService {
             throw new IllegalArgumentException("해당 주식을 보유하고 있지 않습니다.");
         }
         Possession possession = getPossessionByStockAndUser(stock, user);
-        possession.validateSellQuantity(request.quantity());
+        possession.validateSellQuantity(request.getQuantity());
 
-        possession.decrementQuantity(request.quantity());
+        possession.decrementQuantity(request.getQuantity());
         if (possession.getQuantity() == 0) {
             possessionRepository.delete(possession);
         }
 
         CurrentPrice currentPrice = getCurrentPriceByStockAndDate(stock, today);
         /*
-        user.increaseCredit(currentPrice.getCurrentPrice*request.quantity());
+        user.increaseCredit(currentPrice.getCurrentPrice*getQuantity.quantity());
         ┎─────────────────────────────────────────────┐
             User 도메인에 작성 ↓
             public void increaseCredit(int amount) {

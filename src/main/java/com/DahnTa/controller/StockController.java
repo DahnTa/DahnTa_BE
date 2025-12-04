@@ -30,6 +30,43 @@ public class StockController {
         this.stockService = stockService;
     }
 
+    @PostMapping("/start")
+    public ResponseEntity<Void> gameStart() {
+        stockService.gameStart();
+
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    @PostMapping("/next")
+    public ResponseEntity<Void> gameDateNext() {
+        stockService.gameDateNext();
+
+        return ResponseEntity.status(HttpStatus.OK).build();
+    }
+
+    @PostMapping("/finish")
+    public ResponseEntity<Void> gameFinish() {
+        stockService.gameFinish();
+
+        return ResponseEntity.status(HttpStatus.OK).build();
+    }
+
+    @PostMapping("/{id}/orders/buy")
+    public ResponseEntity<Void> stockBuy(@PathVariable(name = "id") Long stockId, @RequestBody
+    StockBuyRequest request) {
+        stockService.stockBuy(stockId, request);
+
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    @PostMapping("/{id}/orders/sell")
+    public ResponseEntity<Void> stockSell(@PathVariable(name = "id") Long stockId, @RequestBody
+    StockSellRequest request) {
+        stockService.stockSell(stockId, request);
+
+        return ResponseEntity.status(HttpStatus.OK).build();
+    }
+
     @GetMapping
     public ResponseEntity<StockListResponse> getStockList() {
         StockListResponse response = stockService.getStockList();
@@ -86,35 +123,5 @@ public class StockController {
         StockTotalAnalysisResponse response = stockService.getTotalAnalysis(stockId);
 
         return ResponseEntity.status(HttpStatus.OK).body(response);
-    }
-
-    @PostMapping("/start")
-    public ResponseEntity<Void> gameStart() {
-        stockService.gameStart();
-
-        return ResponseEntity.status(HttpStatus.CREATED).build();
-    }
-
-    @PostMapping("/{id}/orders/buy")
-    public ResponseEntity<Void> stockBuy(@PathVariable(name = "id") Long stockId, @RequestBody
-        StockBuyRequest request) {
-        stockService.stockBuy(stockId, request);
-
-        return ResponseEntity.status(HttpStatus.CREATED).build();
-    }
-
-    @PostMapping("/{id}/orders/sell")
-    public ResponseEntity<Void> stockSell(@PathVariable(name = "id") Long stockId, @RequestBody
-        StockSellRequest request) {
-        stockService.stockSell(stockId, request);
-
-        return ResponseEntity.status(HttpStatus.OK).build();
-    }
-
-    @PostMapping("/next")
-    public ResponseEntity<Void> gameDateNext() {
-        stockService.gameDateNext();
-
-        return ResponseEntity.status(HttpStatus.OK).build();
     }
 }
