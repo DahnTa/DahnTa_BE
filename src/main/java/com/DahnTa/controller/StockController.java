@@ -1,8 +1,13 @@
 package com.DahnTa.controller;
 
+import com.DahnTa.dto.response.MacroIndicatorsResponse;
+import com.DahnTa.dto.response.StockCompanyFinanceResponse;
 import com.DahnTa.dto.response.StockListResponse;
+import com.DahnTa.dto.response.StockNewsResponse;
 import com.DahnTa.dto.response.StockOrderResponse;
+import com.DahnTa.dto.response.StockRedditResponse;
 import com.DahnTa.dto.response.StockResponse;
+import com.DahnTa.dto.response.StockTotalAnalysisResponse;
 import com.DahnTa.service.StockService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -46,6 +51,43 @@ public class StockController {
     @GetMapping("/{id}/order")
     public ResponseEntity<StockOrderResponse> getStockOrder(@PathVariable(name = "id") Long stockId) {
         StockOrderResponse response = stockService.getStockOrder(stockId);
+
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @GetMapping("/{id}/news")
+    public ResponseEntity<StockNewsResponse> getStockNews(@PathVariable(name = "id") Long stockId) {
+        StockNewsResponse response = stockService.getStockNews(stockId);
+
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @GetMapping("/{id}/company")
+    public ResponseEntity<StockCompanyFinanceResponse> getStockCompanyFinance(
+        @PathVariable(name = "id") Long stockId) {
+        StockCompanyFinanceResponse response = stockService.getStockCompanyFinance(stockId);
+
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @GetMapping("/macro")
+    public ResponseEntity<MacroIndicatorsResponse> getMacroIndicators() {
+        MacroIndicatorsResponse response = stockService.getMacroIndicators();
+
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @GetMapping("/{id}/reddit")
+    public ResponseEntity<StockRedditResponse> getReddit(@PathVariable(name = "id") Long stockId) {
+        StockRedditResponse response = stockService.getReddit(stockId);
+
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @GetMapping("/{id}/total")
+    public ResponseEntity<StockTotalAnalysisResponse> getTotalAnalysis(
+        @PathVariable(name = "id") Long stockId) {
+        StockTotalAnalysisResponse response = stockService.getTotalAnalysis(stockId);
 
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
