@@ -88,6 +88,11 @@ public class StockService {
         setGameInformation(user, randomStart, randomEnd);
     }
 
+    public void gameDateNext() {
+        GameDate gameDate = getGameDateByUser(user);
+        gameDate.updateDay();
+    }
+
     public void stockBuy(Long stockId, StockBuyRequest request) {
         Stock stock = getStockByStockId(stockId);
         LocalDate today = getToday(user);
@@ -98,10 +103,9 @@ public class StockService {
         Possession possession = getPossessionByStockAndUser(stock, user);
         if (possession == null) {
             possession = Possession.create(stock, user, 0);
+            possessionRepository.save(possession);
         }
         possession.increaseQuantity(request.quantity());
-
-        possessionRepository.save(possession);
 
         /*
         user.deductCredit(currentPrice.getCurrentPrice*request.quantity());
