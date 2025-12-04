@@ -78,7 +78,7 @@ public class CsvLoadUtil {
 
     public void loadCsvForCurrentPrice(User user, LocalDate start, LocalDate end) {
         for (String stockName : STOCK_NAMES) {
-            Stock stock = stockRepository.findByStockName(stockName);
+            Stock stock = getStockByName(stockName);
             List<String[]> rows = readFilteredCsv("csv/current_price/" + stockName + ".csv", start, end);
 
             for (String[] data : rows) {
@@ -93,7 +93,7 @@ public class CsvLoadUtil {
 
     public void loadCsvForNews(User user, LocalDate start, LocalDate end) {
         for (String stockName : STOCK_NAMES) {
-            Stock stock = stockRepository.findByStockName(stockName);
+            Stock stock = getStockByName(stockName);
             List<String[]> rows = readFilteredCsv("csv/news/" + stockName + ".csv", start, end);
 
             for (String[] data : rows) {
@@ -116,7 +116,7 @@ public class CsvLoadUtil {
 
     public void loadCsvForCompanyFinance(User user, LocalDate start, LocalDate end) {
         for (String stockName : STOCK_NAMES) {
-            Stock stock = stockRepository.findByStockName(stockName);
+            Stock stock = getStockByName(stockName);
             List<String[]> rows = readFilteredCsv("csv/company_finance/" + stockName + ".csv", start, end);
 
             for (String[] data : rows) {
@@ -129,7 +129,7 @@ public class CsvLoadUtil {
 
     public void loadCsvForReddit(User user, LocalDate start, LocalDate end) {
         for (String stockName : STOCK_NAMES) {
-            Stock stock = stockRepository.findByStockName(stockName);
+            Stock stock = getStockByName(stockName);
             List<String[]> rows = readFilteredCsv("csv/reddit/" + stockName + ".csv", start, end);
 
             for (String[] data : rows) {
@@ -142,7 +142,7 @@ public class CsvLoadUtil {
 
     public void loadCsvForTotalAnalysis(User user, LocalDate start, LocalDate end) {
         for (String stockName : STOCK_NAMES) {
-            Stock stock = stockRepository.findByStockName(stockName);
+            Stock stock = getStockByName(stockName);
             List<String[]> rows = readFilteredCsv("csv/total_analysis/" + stockName + ".csv", start, end);
 
             for (String[] data : rows) {
@@ -151,5 +151,11 @@ public class CsvLoadUtil {
                     TotalAnalysis.create(stock, date, data[1], data[2], user.getUserId()));
             }
         }
+    }
+
+    private Stock getStockByName(String stockName) {
+
+        return stockRepository.findByStockName(stockName)
+            .orElseThrow(() -> new IllegalArgumentException("해당 주식을 찾지 못했습니다."));
     }
 }

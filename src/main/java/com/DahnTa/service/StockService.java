@@ -187,7 +187,7 @@ public class StockService {
         Stock stock = getStockByStockId(stockId);
         LocalDate today = getToday(user);
 
-        News news = newsRepository.findByStockAndDate(stock, today);
+        News news = getNewsByStockAndDate(stock, today);
 
         return StockNewsResponse.create(news.getDate(), news.getDisclaimer(), news.getContent());
     }
@@ -196,7 +196,7 @@ public class StockService {
         Stock stock = getStockByStockId(stockId);
         LocalDate today = getToday(user);
 
-        CompanyFinance companyFinance = companyFinanceRepository.findByStockAndDate(stock, today);
+        CompanyFinance companyFinance = getCompanyFinanceByStockAndDate(stock, today);
 
         return StockCompanyFinanceResponse.create(companyFinance.getDate(), companyFinance.getDisclaimer(),
             companyFinance.getContent());
@@ -205,7 +205,7 @@ public class StockService {
     public MacroIndicatorsResponse getMacroIndicators() {
         LocalDate today = getToday(user);
 
-        MacroIndicators macroIndicators = macroIndicatorsRepository.findByDate(today);
+        MacroIndicators macroIndicators = getMacroIndicatorsByStockAndDate(today);
 
         return MacroIndicatorsResponse.create(macroIndicators.getDate(), macroIndicators.getDisclaimer(),
             macroIndicators.getContent());
@@ -215,7 +215,7 @@ public class StockService {
         Stock stock = getStockByStockId(stockId);
         LocalDate today = getToday(user);
 
-        Reddit reddit = redditRepository.findByStockAndDate(stock, today);
+        Reddit reddit = getRedditByStockAndDate(stock, today);
 
         return StockRedditResponse.create(reddit.getDate(), reddit.getContent(), reddit.getScore(),
             reddit.getNumComment());
@@ -225,7 +225,7 @@ public class StockService {
         Stock stock = getStockByStockId(stockId);
         LocalDate today = getToday(user);
 
-        TotalAnalysis totalAnalysis = totalAnalysisRepository.findByStockAndDate(stock, today);
+        TotalAnalysis totalAnalysis = getTotalAnalysisByStockAndDate(stock, today);
 
         return StockTotalAnalysisResponse.create(totalAnalysis.getDate(), totalAnalysis.getCompanyName(),
             totalAnalysis.getAnalyze());
@@ -291,5 +291,30 @@ public class StockService {
 
         return currentPriceRepository.findByStockAndDate(stock, date)
             .orElseThrow(() -> new IllegalArgumentException("해당 날짜의 주식 가격을 찾을 수 없습니다."));
+    }
+
+    private News getNewsByStockAndDate(Stock stock, LocalDate date){
+        return newsRepository.findByStockAndDate(stock, date)
+            .orElseThrow(() -> new IllegalArgumentException("해당 날짜의 주식 뉴스를 찾을 수 없습니다."));
+    }
+
+    private CompanyFinance getCompanyFinanceByStockAndDate(Stock stock, LocalDate date){
+        return companyFinanceRepository.findByStockAndDate(stock, date)
+            .orElseThrow(() -> new IllegalArgumentException("해당 날짜의 주식 재무제표를 찾을 수 없습니다."));
+    }
+
+    private MacroIndicators getMacroIndicatorsByStockAndDate(LocalDate date){
+        return macroIndicatorsRepository.findByDate(date)
+            .orElseThrow(() -> new IllegalArgumentException("해당 날짜의 거시경제를 찾을 수 없습니다."));
+    }
+
+    private Reddit getRedditByStockAndDate(Stock stock, LocalDate date){
+        return redditRepository.findByStockAndDate(stock, date)
+            .orElseThrow(() -> new IllegalArgumentException("해당 날짜의 주식 Reddit을 찾을 수 없습니다."));
+    }
+
+    private TotalAnalysis getTotalAnalysisByStockAndDate(Stock stock, LocalDate date){
+        return totalAnalysisRepository.findByStockAndDate(stock, date)
+            .orElseThrow(() -> new IllegalArgumentException("해당 날짜의 주식 종합분석을 찾을 수 없습니다."));
     }
 }
