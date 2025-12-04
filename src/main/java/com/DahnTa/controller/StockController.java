@@ -1,5 +1,6 @@
 package com.DahnTa.controller;
 
+import com.DahnTa.dto.request.StockBuyRequest;
 import com.DahnTa.dto.response.MacroIndicatorsResponse;
 import com.DahnTa.dto.response.StockCompanyFinanceResponse;
 import com.DahnTa.dto.response.StockListResponse;
@@ -14,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -25,13 +27,6 @@ public class StockController {
 
     public StockController(StockService stockService) {
         this.stockService = stockService;
-    }
-
-    @PostMapping("/start")
-    public ResponseEntity<Void> gameStart() {
-        stockService.gameStart();
-
-        return ResponseEntity.status(HttpStatus.OK).build();
     }
 
     @GetMapping
@@ -90,5 +85,20 @@ public class StockController {
         StockTotalAnalysisResponse response = stockService.getTotalAnalysis(stockId);
 
         return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @PostMapping("/start")
+    public ResponseEntity<Void> gameStart() {
+        stockService.gameStart();
+
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    @PostMapping("/{id}/orders/buy")
+    public ResponseEntity<Void> stockBuy(@PathVariable(name = "id") Long stockId, @RequestBody
+        StockBuyRequest request) {
+        stockService.stockBuy(stockId, request);
+
+        return ResponseEntity.status(HttpStatus.OK).build();
     }
 }

@@ -2,6 +2,7 @@ package com.DahnTa.service;
 
 import com.DahnTa.dto.DashBoard;
 import com.DahnTa.dto.MarketPrices;
+import com.DahnTa.dto.request.StockBuyRequest;
 import com.DahnTa.dto.response.MacroIndicatorsResponse;
 import com.DahnTa.dto.response.StockCompanyFinanceResponse;
 import com.DahnTa.dto.response.StockListResponse;
@@ -35,8 +36,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Transactional
 public class StockService {
 
     private final GameDateRepository gameDateRepository;
@@ -83,6 +86,32 @@ public class StockService {
         gameDateRepository.save(gameDate);
 
         setGameInformation(user, randomStart, randomEnd);
+    }
+
+    public void stockBuy(Long stockId, StockBuyRequest request) {
+        Stock stock = getStockByStockId(stockId);
+        LocalDate today = getToday(user);
+        CurrentPrice currentPrice = currentPriceRepository.findByStockAndDate(stock, today);
+
+        currentPrice.validateBuyQuantity(user.getUserCredit, request.quantity());
+
+        Possession possession = getPossessionByStockAndUser(stock, user);
+        if (possession == null) {
+            possession = Possession.create(stock, user, 0);
+        }
+        possession.increaseQuantity(request.quantity());
+
+        possessionRepository.save(possession);
+
+        /*
+        user.deductCredit(currentPrice.getCurrentPrice*request.quantity());
+        ┎───────────────────────────────────────┐
+            User 도메인에 작성 ↓
+            public void deductCredit(int amount) {
+                this.credit -= amount;
+            }
+        └───────────────────────────────────────┘
+         */
     }
 
     public StockListResponse getStockList() {

@@ -50,4 +50,8 @@ public class Possession {
             .quantity(quantity)
             .build();
     }
+
+    public void increaseQuantity(int quantity) {
+        this.quantity += quantity;
+    }
 }
