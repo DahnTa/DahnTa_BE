@@ -68,4 +68,8 @@ public class User {
     }
 
 
+    public void updatePassword(String userPassword) {
+        this.userPassword = userPassword;
+    }
+
 }
