@@ -91,7 +91,7 @@ public class StockService {
     public void stockBuy(Long stockId, StockBuyRequest request) {
         Stock stock = getStockByStockId(stockId);
         LocalDate today = getToday(user);
-        CurrentPrice currentPrice = currentPriceRepository.findByStockAndDate(stock, today);
+        CurrentPrice currentPrice = getCurrentPriceByStockAndDate(stock, today);
 
         currentPrice.validateBuyQuantity(user.getUserCredit, request.quantity());
 
@@ -105,12 +105,39 @@ public class StockService {
 
         /*
         user.deductCredit(currentPrice.getCurrentPrice*request.quantity());
-        ┎───────────────────────────────────────┐
+        ┎─────────────────────────────────────────────┐
             User 도메인에 작성 ↓
             public void deductCredit(int amount) {
                 this.credit -= amount;
             }
-        └───────────────────────────────────────┘
+        └─────────────────────────────────────────────┘
+         */
+    }
+
+    public void stockSell(Long stockId, StockBuyRequest request) {
+        Stock stock = getStockByStockId(stockId);
+        LocalDate today = getToday(user);
+
+        if (!possessionRepository.existsByStockAnUser(stock, user)) {
+            throw new IllegalArgumentException("해당 주식을 보유하고 있지 않습니다.");
+        }
+        Possession possession = getPossessionByStockAndUser(stock, user);
+        possession.validateSellQuantity(request.quantity());
+
+        possession.decrementQuantity(request.quantity());
+        if (possession.getQuantity() == 0) {
+            possessionRepository.delete(possession);
+        }
+
+        CurrentPrice currentPrice = getCurrentPriceByStockAndDate(stock, today);
+        /*
+        user.increaseCredit(currentPrice.getCurrentPrice*request.quantity());
+        ┎─────────────────────────────────────────────┐
+            User 도메인에 작성 ↓
+            public void increaseCredit(int amount) {
+                this.credit += amount;
+            }
+        └─────────────────────────────────────────────┘
          */
     }
 
@@ -120,7 +147,7 @@ public class StockService {
 
         List<DashBoard> dashBoards = new ArrayList<>();
         for (Stock stock : stocks) {
-            CurrentPrice currentPrice = currentPriceRepository.findByStockAndDate(stock, today);
+            CurrentPrice currentPrice = getCurrentPriceByStockAndDate(stock, today);
             DashBoard board = DashBoard.create(stock.getId(), stock.getStockName(), stock.getStockTag(),
                 currentPrice.getCurrentPrice(), currentPrice.getMarketPrice(),
                 getChangeRate(stock, currentPrice, today), getChangeAmount(stock, currentPrice, today));
@@ -133,7 +160,7 @@ public class StockService {
     public StockResponse getStock(Long stockId) {
         Stock stock = getStockByStockId(stockId);
         LocalDate today = getToday(user);
-        CurrentPrice currentPrice = currentPriceRepository.findByStockAndDate(stock, today);
+        CurrentPrice currentPrice = getCurrentPriceByStockAndDate(stock, today);
         GameDate gameDate = getGameDateByUser(user);
         List<MarketPrices> marketPrices = getMarketPricesUntilToday(stock, gameDate.getStartDate(), today);
 
@@ -150,7 +177,7 @@ public class StockService {
         }
 
         LocalDate today = getToday(user);
-        CurrentPrice currentPrice = currentPriceRepository.findByStockAndDate(stock, today);
+        CurrentPrice currentPrice = getCurrentPriceByStockAndDate(stock, today);
 
         return StockOrderResponse.create(quantity, ,
             currentPrice.calculateAvailableOrderAmount(user.getUserCredit));
@@ -214,12 +241,12 @@ public class StockService {
     }
 
     private double getChangeRate(Stock stock, CurrentPrice currentPrice, LocalDate date) {
-        CurrentPrice yesterdayPrice = currentPriceRepository.findByStockAndDate(stock, date.minusDays(1));
+        CurrentPrice yesterdayPrice = getCurrentPriceByStockAndDate(stock, date.minusDays(1));
         return currentPrice.calculateChangeRate(yesterdayPrice);
     }
 
     private int getChangeAmount(Stock stock, CurrentPrice currentPrice, LocalDate date) {
-        CurrentPrice yesterdayPrice = currentPriceRepository.findByStockAndDate(stock, date.minusDays(1));
+        CurrentPrice yesterdayPrice = getCurrentPriceByStockAndDate(stock, date.minusDays(1));
         return currentPrice.calculateChangeAmount(yesterdayPrice);
     }
 
@@ -235,7 +262,7 @@ public class StockService {
         List<MarketPrices> marketPrices = new ArrayList<>();
 
         for (LocalDate date = startDate; !date.isAfter(today); date = date.plusDays(1)) {
-            CurrentPrice currentPrice = currentPriceRepository.findByStockAndDate(stock, date);
+            CurrentPrice currentPrice = getCurrentPriceByStockAndDate(stock, date);
             marketPrices.add(MarketPrices.create(currentPrice.getMarketPrice()));
         }
 
@@ -258,5 +285,11 @@ public class StockService {
 
         return possessionRepository.findByStockAndUser(stock, user)
             .orElse(null);
+    }
+
+    private CurrentPrice getCurrentPriceByStockAndDate(Stock stock, LocalDate date) {
+
+        return currentPriceRepository.findByStockAndDate(stock, date)
+            .orElseThrow(() -> new IllegalArgumentException("해당 날짜의 주식 가격을 찾을 수 없습니다."));
     }
 }

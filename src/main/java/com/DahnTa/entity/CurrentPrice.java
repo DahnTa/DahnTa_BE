@@ -78,8 +78,8 @@ public class CurrentPrice {
         return userCredit / this.currentPrice * this.currentPrice;
     }
 
-    public void validateBuyQuantity(int userCredit, int BuyQuantity) {
-        if (userCredit > this.currentPrice * BuyQuantity) {
+    public void validateBuyQuantity(int userCredit, int buyQuantity) {
+        if (userCredit > this.currentPrice * buyQuantity) {
             throw new IllegalArgumentException("사용자의 보유 금액이 부족합니다.");
         }
     }

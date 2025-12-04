@@ -1,6 +1,7 @@
 package com.DahnTa.controller;
 
 import com.DahnTa.dto.request.StockBuyRequest;
+import com.DahnTa.dto.request.StockSellRequest;
 import com.DahnTa.dto.response.MacroIndicatorsResponse;
 import com.DahnTa.dto.response.StockCompanyFinanceResponse;
 import com.DahnTa.dto.response.StockListResponse;
@@ -98,6 +99,14 @@ public class StockController {
     public ResponseEntity<Void> stockBuy(@PathVariable(name = "id") Long stockId, @RequestBody
         StockBuyRequest request) {
         stockService.stockBuy(stockId, request);
+
+        return ResponseEntity.status(HttpStatus.OK).build();
+    }
+
+    @PostMapping("/{id}/orders/sell")
+    public ResponseEntity<Void> stockSell(@PathVariable(name = "id") Long stockId, @RequestBody
+        StockSellRequest request) {
+        stockService.stockSell(stockId, request);
 
         return ResponseEntity.status(HttpStatus.OK).build();
     }
