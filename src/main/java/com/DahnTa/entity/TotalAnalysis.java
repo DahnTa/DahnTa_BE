@@ -14,9 +14,9 @@ import lombok.Builder;
 import lombok.Getter;
 
 @Entity
-@Table(name = "REDDIT_TB")
+@Table(name = "TOTAL_ANALYSIS_TB")
 @Getter
-public class Reddit {
+public class TotalAnalysis {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,39 +30,35 @@ public class Reddit {
     @Column(name = "date", nullable = false)
     private LocalDate date;
 
-    @Column(name = "content", nullable = false)
-    private String content;
+    @Column(name = "company_name", nullable = false)
+    private String companyName;
 
-    @Column(name = "score", nullable = false)
-    private int score;
-
-    @Column(name = "num_comment", nullable = false)
-    private int numComment;
+    @Column(name = "analyze", nullable = false)
+    private String analyze;
 
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
-    protected Reddit() {}
+    protected TotalAnalysis() {
+    }
 
-    private Reddit(Stock stock, LocalDate date, String content, int score, int numComment, Long userId) {
+    private TotalAnalysis(Stock stock, LocalDate date, String companyName, String analyze, Long userId) {
         this.stock = stock;
         this.date = date;
-        this.content = content;
-        this.score = score;
-        this.numComment = numComment;
+        this.companyName = companyName;
+        this.analyze = analyze;
         this.userId = userId;
     }
 
     @Builder
-    public static Reddit create(Stock stock, LocalDate date, String content, int score, int numComment, Long userId) {
+    public static TotalAnalysis create(Stock stock, LocalDate date, String companyName, String analyze,
+        Long userId) {
 
-        return Reddit.builder()
+        return TotalAnalysis.builder()
             .stock(stock)
             .date(date)
-            .content(content)
-            .score(score)
-            .numComment(numComment)
-            .userId(userId)
+            .companyName(companyName)
+            .analyze(analyze)
             .build();
     }
 }

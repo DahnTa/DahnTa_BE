@@ -5,6 +5,7 @@ import com.DahnTa.dto.response.StockCompanyFinanceResponse;
 import com.DahnTa.dto.response.StockListResponse;
 import com.DahnTa.dto.response.StockNewsResponse;
 import com.DahnTa.dto.response.StockOrderResponse;
+import com.DahnTa.dto.response.StockRedditResponse;
 import com.DahnTa.dto.response.StockResponse;
 import com.DahnTa.service.StockService;
 import org.springframework.http.HttpStatus;
@@ -71,6 +72,13 @@ public class StockController {
     @GetMapping("/macro")
     public ResponseEntity<MacroIndicatorsResponse> getMacroIndicators() {
         MacroIndicatorsResponse response = stockService.getMacroIndicators();
+
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @GetMapping("/{id}/reddit")
+    public ResponseEntity<StockRedditResponse> getReddit(@PathVariable(name = "id") Long stockId) {
+        StockRedditResponse response = stockService.getReddit(stockId);
 
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }

@@ -7,6 +7,7 @@ import com.DahnTa.dto.response.StockCompanyFinanceResponse;
 import com.DahnTa.dto.response.StockListResponse;
 import com.DahnTa.dto.response.StockNewsResponse;
 import com.DahnTa.dto.response.StockOrderResponse;
+import com.DahnTa.dto.response.StockRedditResponse;
 import com.DahnTa.dto.response.StockResponse;
 import com.DahnTa.entity.CompanyFinance;
 import com.DahnTa.entity.CurrentPrice;
@@ -14,6 +15,7 @@ import com.DahnTa.entity.GameDate;
 import com.DahnTa.entity.MacroIndicators;
 import com.DahnTa.entity.News;
 import com.DahnTa.entity.Possession;
+import com.DahnTa.entity.Reddit;
 import com.DahnTa.entity.Stock;
 import com.DahnTa.repository.CompanyFinanceRepository;
 import com.DahnTa.repository.CurrentPriceRepository;
@@ -147,11 +149,22 @@ public class StockService {
             macroIndicators.getContent());
     }
 
+    public StockRedditResponse getReddit(Long stockId) {
+        Stock stock = getStockByStockId(stockId);
+        LocalDate today = getToday(user);
+
+        Reddit reddit = redditRepository.findByStockAndDate(stock, today);
+
+        return StockRedditResponse.create(reddit.getDate(), reddit.getContent(), reddit.getScore(),
+            reddit.getNumComment());
+    }
+
     private void setGameInformation(User user, LocalDate randomStart, LocalDate randomEnd) {
         csvLoadUtil.loadCsvForCurrentPrice(user, randomStart, randomEnd);
         csvLoadUtil.loadCsvForNews(user, randomStart, randomEnd);
         csvLoadUtil.loadCsvForMacroIndicators(user, randomStart, randomEnd);
         csvLoadUtil.loadCsvForCompanyFinance(user, randomStart, randomEnd);
+        csvLoadUtil.loadCsvForReddit(user, randomStart, randomEnd);
     }
 
     private double getChangeRate(Stock stock, CurrentPrice currentPrice, LocalDate date) {

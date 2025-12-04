@@ -4,6 +4,7 @@ import com.DahnTa.entity.CompanyFinance;
 import com.DahnTa.entity.CurrentPrice;
 import com.DahnTa.entity.MacroIndicators;
 import com.DahnTa.entity.News;
+import com.DahnTa.entity.Reddit;
 import com.DahnTa.entity.Stock;
 import com.DahnTa.repository.CompanyFinanceRepository;
 import com.DahnTa.repository.CurrentPriceRepository;
@@ -80,8 +81,7 @@ public class CsvLoadUtil {
                 double currentPrice = Double.parseDouble(data[(int) (Math.random() * 2 + 1)]);
                 double marketPrice = Double.parseDouble(data[(int) (Math.random() * 4 + 3)]);
                 currentPriceRepository.save(
-                    CurrentPrice.create(stock, date, currentPrice, marketPrice, user.getUserId())
-                );
+                    CurrentPrice.create(stock, date, currentPrice, marketPrice, user.getUserId()));
             }
         }
     }
@@ -94,8 +94,7 @@ public class CsvLoadUtil {
             for (String[] data : rows) {
                 LocalDate date = LocalDate.parse(data[0]);
                 newsRepository.save(
-                    News.create(stock, date, data[1], data[2], user.getUserId())
-                );
+                    News.create(stock, date, data[1], data[2], user.getUserId()));
             }
         }
     }
@@ -106,8 +105,7 @@ public class CsvLoadUtil {
         for (String[] data : rows) {
             LocalDate date = LocalDate.parse(data[0]);
             macroIndicatorsRepository.save(
-                MacroIndicators.create(date, data[1], data[2], user.getUserId())
-            );
+                MacroIndicators.create(date, data[1], data[2], user.getUserId()));
         }
     }
 
@@ -119,8 +117,20 @@ public class CsvLoadUtil {
             for (String[] data : rows) {
                 LocalDate date = LocalDate.parse(data[0]);
                 companyFinanceRepository.save(
-                    CompanyFinance.create(stock, date, data[1], data[2], user.getUserId())
-                );
+                    CompanyFinance.create(stock, date, data[1], data[2], user.getUserId()));
+            }
+        }
+    }
+
+    public void loadCsvForReddit(User user, LocalDate start, LocalDate end) {
+        for (String stockName : STOCK_NAMES) {
+            Stock stock = stockRepository.findByStockName(stockName);
+            List<String[]> rows = readFilteredCsv("csv/reddit/" + stockName + ".csv", start, end);
+
+            for (String[] data : rows) {
+                LocalDate date = LocalDate.parse(data[0]);
+                redditRepository.save(
+                    Reddit.create(stock, date, data[1], data[2], data[3], data[4], user.getUserId()));
             }
         }
     }
