@@ -1,24 +1,30 @@
 package com.DahnTa.dto.Auth;
 
+import jakarta.validation.constraints.NotBlank;
+
 public class SignUpRequestDTO {
     private Long id;
+
+    @NotBlank
     private String userAccount;
+
+    @NotBlank
     private String userPassword;
-    private int userCredit;
+
+//  해당 값은 임의로 저장할 수 없어야 함
+//    private int userCredit;
 
     // @todo : 기본 닉과, 유저 프로필 필요
-    // 기본 닉은 그냥 아이디
     private String userNickName;
     private String userProfileImageUrl;
 
 
     // 기본 생성자
-    public SignUpRequestDTO(Long id, String userAccount, String userPassword, int userCredit,
+    public SignUpRequestDTO(Long id, String userAccount, String userPassword,
         String userNickName, String userProfileImageUrl) {
         this.id = id;
         this.userAccount = userAccount;
         this.userPassword = userPassword;
-        this.userCredit = userCredit;
         this.userNickName = userNickName;
         this.userProfileImageUrl = userProfileImageUrl;
     }
@@ -33,10 +39,6 @@ public class SignUpRequestDTO {
 
     public String getUserPassword() {
         return userPassword;
-    }
-
-    public int getUserCredit() {
-        return userCredit;
     }
 
     public String getUserNickName() {
@@ -58,10 +60,6 @@ public class SignUpRequestDTO {
 
     public void setUserPassword(String userPassword) {
         this.userPassword = userPassword;
-    }
-
-    public void setUserCredit(int userCredit) {
-        this.userCredit = userCredit;
     }
 
     public void setUserNickName(String userNickName) {
