@@ -6,6 +6,7 @@ import com.DahnTa.dto.Auth.SignUpRequestDTO;
 import com.DahnTa.entity.User;
 import com.DahnTa.repository.AuthRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class AuthService {
@@ -41,13 +42,22 @@ public class AuthService {
         return new LoginResponseDTO(accessToken, refreshToken);
     }
 
+    @Transactional
+    public void changePassword(Long userId, String password) {
+        User user = authRepository.findById(userId)
+            .orElseThrow(() -> new RuntimeException("해당 id의 user가 존재하지 않음."));
+
+        user.updatePassword(password);
+    }
+
 
     // dto to entity
     // @todo : builder pattern으로 개선 필요
+    // @todo : password 암호화하여 저장 필요
     private User toEntity(SignUpRequestDTO signUpRequestDTO) {
-        // @todo : password 암호화하여 저장 필요..?
          User userEntity = new User(signUpRequestDTO.getUserAccount(), signUpRequestDTO.getUserPassword(),
-             signUpRequestDTO.getUserNickName(), signUpRequestDTO.getUserCredit(), signUpRequestDTO.getUserProfileImageUrl());
+             signUpRequestDTO.getUserNickName(), 10000000, signUpRequestDTO.getUserProfileImageUrl());
         return userEntity;
     }
+
 }
