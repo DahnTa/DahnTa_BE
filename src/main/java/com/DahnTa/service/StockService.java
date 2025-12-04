@@ -2,6 +2,7 @@ package com.DahnTa.service;
 
 import com.DahnTa.dto.DashBoard;
 import com.DahnTa.dto.MarketPrices;
+import com.DahnTa.dto.request.StockBuyRequest;
 import com.DahnTa.dto.response.MacroIndicatorsResponse;
 import com.DahnTa.dto.response.StockCompanyFinanceResponse;
 import com.DahnTa.dto.response.StockListResponse;
@@ -35,8 +36,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Transactional
 public class StockService {
 
     private final GameDateRepository gameDateRepository;
@@ -85,13 +88,66 @@ public class StockService {
         setGameInformation(user, randomStart, randomEnd);
     }
 
+    public void stockBuy(Long stockId, StockBuyRequest request) {
+        Stock stock = getStockByStockId(stockId);
+        LocalDate today = getToday(user);
+        CurrentPrice currentPrice = getCurrentPriceByStockAndDate(stock, today);
+
+        currentPrice.validateBuyQuantity(user.getUserCredit, request.quantity());
+
+        Possession possession = getPossessionByStockAndUser(stock, user);
+        if (possession == null) {
+            possession = Possession.create(stock, user, 0);
+        }
+        possession.increaseQuantity(request.quantity());
+
+        possessionRepository.save(possession);
+
+        /*
+        user.deductCredit(currentPrice.getCurrentPrice*request.quantity());
+        ┎─────────────────────────────────────────────┐
+            User 도메인에 작성 ↓
+            public void deductCredit(int amount) {
+                this.credit -= amount;
+            }
+        └─────────────────────────────────────────────┘
+         */
+    }
+
+    public void stockSell(Long stockId, StockBuyRequest request) {
+        Stock stock = getStockByStockId(stockId);
+        LocalDate today = getToday(user);
+
+        if (!possessionRepository.existsByStockAnUser(stock, user)) {
+            throw new IllegalArgumentException("해당 주식을 보유하고 있지 않습니다.");
+        }
+        Possession possession = getPossessionByStockAndUser(stock, user);
+        possession.validateSellQuantity(request.quantity());
+
+        possession.decrementQuantity(request.quantity());
+        if (possession.getQuantity() == 0) {
+            possessionRepository.delete(possession);
+        }
+
+        CurrentPrice currentPrice = getCurrentPriceByStockAndDate(stock, today);
+        /*
+        user.increaseCredit(currentPrice.getCurrentPrice*request.quantity());
+        ┎─────────────────────────────────────────────┐
+            User 도메인에 작성 ↓
+            public void increaseCredit(int amount) {
+                this.credit += amount;
+            }
+        └─────────────────────────────────────────────┘
+         */
+    }
+
     public StockListResponse getStockList() {
         List<Stock> stocks = stockRepository.findAll();
         LocalDate today = getToday(user);
 
         List<DashBoard> dashBoards = new ArrayList<>();
         for (Stock stock : stocks) {
-            CurrentPrice currentPrice = currentPriceRepository.findByStockAndDate(stock, today);
+            CurrentPrice currentPrice = getCurrentPriceByStockAndDate(stock, today);
             DashBoard board = DashBoard.create(stock.getId(), stock.getStockName(), stock.getStockTag(),
                 currentPrice.getCurrentPrice(), currentPrice.getMarketPrice(),
                 getChangeRate(stock, currentPrice, today), getChangeAmount(stock, currentPrice, today));
@@ -104,7 +160,7 @@ public class StockService {
     public StockResponse getStock(Long stockId) {
         Stock stock = getStockByStockId(stockId);
         LocalDate today = getToday(user);
-        CurrentPrice currentPrice = currentPriceRepository.findByStockAndDate(stock, today);
+        CurrentPrice currentPrice = getCurrentPriceByStockAndDate(stock, today);
         GameDate gameDate = getGameDateByUser(user);
         List<MarketPrices> marketPrices = getMarketPricesUntilToday(stock, gameDate.getStartDate(), today);
 
@@ -121,7 +177,7 @@ public class StockService {
         }
 
         LocalDate today = getToday(user);
-        CurrentPrice currentPrice = currentPriceRepository.findByStockAndDate(stock, today);
+        CurrentPrice currentPrice = getCurrentPriceByStockAndDate(stock, today);
 
         return StockOrderResponse.create(quantity, ,
             currentPrice.calculateAvailableOrderAmount(user.getUserCredit));
@@ -131,7 +187,7 @@ public class StockService {
         Stock stock = getStockByStockId(stockId);
         LocalDate today = getToday(user);
 
-        News news = newsRepository.findByStockAndDate(stock, today);
+        News news = getNewsByStockAndDate(stock, today);
 
         return StockNewsResponse.create(news.getDate(), news.getDisclaimer(), news.getContent());
     }
@@ -140,7 +196,7 @@ public class StockService {
         Stock stock = getStockByStockId(stockId);
         LocalDate today = getToday(user);
 
-        CompanyFinance companyFinance = companyFinanceRepository.findByStockAndDate(stock, today);
+        CompanyFinance companyFinance = getCompanyFinanceByStockAndDate(stock, today);
 
         return StockCompanyFinanceResponse.create(companyFinance.getDate(), companyFinance.getDisclaimer(),
             companyFinance.getContent());
@@ -149,7 +205,7 @@ public class StockService {
     public MacroIndicatorsResponse getMacroIndicators() {
         LocalDate today = getToday(user);
 
-        MacroIndicators macroIndicators = macroIndicatorsRepository.findByDate(today);
+        MacroIndicators macroIndicators = getMacroIndicatorsByStockAndDate(today);
 
         return MacroIndicatorsResponse.create(macroIndicators.getDate(), macroIndicators.getDisclaimer(),
             macroIndicators.getContent());
@@ -159,7 +215,7 @@ public class StockService {
         Stock stock = getStockByStockId(stockId);
         LocalDate today = getToday(user);
 
-        Reddit reddit = redditRepository.findByStockAndDate(stock, today);
+        Reddit reddit = getRedditByStockAndDate(stock, today);
 
         return StockRedditResponse.create(reddit.getDate(), reddit.getContent(), reddit.getScore(),
             reddit.getNumComment());
@@ -169,7 +225,7 @@ public class StockService {
         Stock stock = getStockByStockId(stockId);
         LocalDate today = getToday(user);
 
-        TotalAnalysis totalAnalysis = totalAnalysisRepository.findByStockAndDate(stock, today);
+        TotalAnalysis totalAnalysis = getTotalAnalysisByStockAndDate(stock, today);
 
         return StockTotalAnalysisResponse.create(totalAnalysis.getDate(), totalAnalysis.getCompanyName(),
             totalAnalysis.getAnalyze());
@@ -185,12 +241,12 @@ public class StockService {
     }
 
     private double getChangeRate(Stock stock, CurrentPrice currentPrice, LocalDate date) {
-        CurrentPrice yesterdayPrice = currentPriceRepository.findByStockAndDate(stock, date.minusDays(1));
+        CurrentPrice yesterdayPrice = getCurrentPriceByStockAndDate(stock, date.minusDays(1));
         return currentPrice.calculateChangeRate(yesterdayPrice);
     }
 
     private int getChangeAmount(Stock stock, CurrentPrice currentPrice, LocalDate date) {
-        CurrentPrice yesterdayPrice = currentPriceRepository.findByStockAndDate(stock, date.minusDays(1));
+        CurrentPrice yesterdayPrice = getCurrentPriceByStockAndDate(stock, date.minusDays(1));
         return currentPrice.calculateChangeAmount(yesterdayPrice);
     }
 
@@ -206,7 +262,7 @@ public class StockService {
         List<MarketPrices> marketPrices = new ArrayList<>();
 
         for (LocalDate date = startDate; !date.isAfter(today); date = date.plusDays(1)) {
-            CurrentPrice currentPrice = currentPriceRepository.findByStockAndDate(stock, date);
+            CurrentPrice currentPrice = getCurrentPriceByStockAndDate(stock, date);
             marketPrices.add(MarketPrices.create(currentPrice.getMarketPrice()));
         }
 
@@ -229,5 +285,36 @@ public class StockService {
 
         return possessionRepository.findByStockAndUser(stock, user)
             .orElse(null);
+    }
+
+    private CurrentPrice getCurrentPriceByStockAndDate(Stock stock, LocalDate date) {
+
+        return currentPriceRepository.findByStockAndDate(stock, date)
+            .orElseThrow(() -> new IllegalArgumentException("해당 날짜의 주식 가격을 찾을 수 없습니다."));
+    }
+
+    private News getNewsByStockAndDate(Stock stock, LocalDate date){
+        return newsRepository.findByStockAndDate(stock, date)
+            .orElseThrow(() -> new IllegalArgumentException("해당 날짜의 주식 뉴스를 찾을 수 없습니다."));
+    }
+
+    private CompanyFinance getCompanyFinanceByStockAndDate(Stock stock, LocalDate date){
+        return companyFinanceRepository.findByStockAndDate(stock, date)
+            .orElseThrow(() -> new IllegalArgumentException("해당 날짜의 주식 재무제표를 찾을 수 없습니다."));
+    }
+
+    private MacroIndicators getMacroIndicatorsByStockAndDate(LocalDate date){
+        return macroIndicatorsRepository.findByDate(date)
+            .orElseThrow(() -> new IllegalArgumentException("해당 날짜의 거시경제를 찾을 수 없습니다."));
+    }
+
+    private Reddit getRedditByStockAndDate(Stock stock, LocalDate date){
+        return redditRepository.findByStockAndDate(stock, date)
+            .orElseThrow(() -> new IllegalArgumentException("해당 날짜의 주식 Reddit을 찾을 수 없습니다."));
+    }
+
+    private TotalAnalysis getTotalAnalysisByStockAndDate(Stock stock, LocalDate date){
+        return totalAnalysisRepository.findByStockAndDate(stock, date)
+            .orElseThrow(() -> new IllegalArgumentException("해당 날짜의 주식 종합분석을 찾을 수 없습니다."));
     }
 }

@@ -50,4 +50,18 @@ public class Possession {
             .quantity(quantity)
             .build();
     }
+
+    public void increaseQuantity(int quantity) {
+        this.quantity += quantity;
+    }
+
+    public void decrementQuantity(int quantity) {
+        this.quantity -= quantity;
+    }
+
+    public void validateSellQuantity(int sellQuantity) {
+        if (this.quantity < sellQuantity) {
+            throw new IllegalArgumentException("보유 수량보다 많이 팔 수 없습니다.");
+        }
+    }
 }
