@@ -59,6 +59,7 @@ public class TotalAnalysis {
             .date(date)
             .companyName(companyName)
             .analyze(analyze)
+            .userId(userId)
             .build();
     }
 }

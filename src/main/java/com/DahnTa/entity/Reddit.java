@@ -42,7 +42,8 @@ public class Reddit {
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
-    protected Reddit() {}
+    protected Reddit() {
+    }
 
     private Reddit(Stock stock, LocalDate date, String content, int score, int numComment, Long userId) {
         this.stock = stock;
@@ -54,7 +55,8 @@ public class Reddit {
     }
 
     @Builder
-    public static Reddit create(Stock stock, LocalDate date, String content, int score, int numComment, Long userId) {
+    public static Reddit create(Stock stock, LocalDate date, String content, int score, int numComment,
+        Long userId) {
 
         return Reddit.builder()
             .stock(stock)

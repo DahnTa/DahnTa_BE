@@ -9,6 +9,7 @@ import com.DahnTa.dto.response.StockNewsResponse;
 import com.DahnTa.dto.response.StockOrderResponse;
 import com.DahnTa.dto.response.StockRedditResponse;
 import com.DahnTa.dto.response.StockResponse;
+import com.DahnTa.dto.response.StockTotalAnalysisResponse;
 import com.DahnTa.entity.CompanyFinance;
 import com.DahnTa.entity.CurrentPrice;
 import com.DahnTa.entity.GameDate;
@@ -17,6 +18,7 @@ import com.DahnTa.entity.News;
 import com.DahnTa.entity.Possession;
 import com.DahnTa.entity.Reddit;
 import com.DahnTa.entity.Stock;
+import com.DahnTa.entity.TotalAnalysis;
 import com.DahnTa.repository.CompanyFinanceRepository;
 import com.DahnTa.repository.CurrentPriceRepository;
 import com.DahnTa.repository.GameDateRepository;
@@ -25,6 +27,7 @@ import com.DahnTa.repository.NewsRepository;
 import com.DahnTa.repository.PossessionRepository;
 import com.DahnTa.repository.RedditRepository;
 import com.DahnTa.repository.StockRepository;
+import com.DahnTa.repository.TotalAnalysisRepository;
 import com.DahnTa.unit.CsvLoadUtil;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -44,13 +47,15 @@ public class StockService {
     private final MacroIndicatorsRepository macroIndicatorsRepository;
     private final NewsRepository newsRepository;
     private final RedditRepository redditRepository;
+    private final TotalAnalysisRepository totalAnalysisRepository;
     private final CsvLoadUtil csvLoadUtil;
 
     public StockService(GameDateRepository gameDateRepository, StockRepository stockRepository,
         PossessionRepository possessionRepository, CurrentPriceRepository currentPriceRepository,
         CompanyFinanceRepository companyFinanceRepository,
         MacroIndicatorsRepository macroIndicatorsRepository, NewsRepository newsRepository,
-        RedditRepository redditRepository, CsvLoadUtil csvLoadUtil) {
+        RedditRepository redditRepository, TotalAnalysisRepository totalAnalysisRepository,
+        CsvLoadUtil csvLoadUtil) {
         this.gameDateRepository = gameDateRepository;
         this.stockRepository = stockRepository;
         this.possessionRepository = possessionRepository;
@@ -59,6 +64,7 @@ public class StockService {
         this.macroIndicatorsRepository = macroIndicatorsRepository;
         this.newsRepository = newsRepository;
         this.redditRepository = redditRepository;
+        this.totalAnalysisRepository = totalAnalysisRepository;
         this.csvLoadUtil = csvLoadUtil;
     }
 
@@ -159,12 +165,23 @@ public class StockService {
             reddit.getNumComment());
     }
 
+    public StockTotalAnalysisResponse getTotalAnalysis(Long stockId) {
+        Stock stock = getStockByStockId(stockId);
+        LocalDate today = getToday(user);
+
+        TotalAnalysis totalAnalysis = totalAnalysisRepository.findByStockAndDate(stock, today);
+
+        return StockTotalAnalysisResponse.create(totalAnalysis.getDate(), totalAnalysis.getCompanyName(),
+            totalAnalysis.getAnalyze());
+    }
+
     private void setGameInformation(User user, LocalDate randomStart, LocalDate randomEnd) {
         csvLoadUtil.loadCsvForCurrentPrice(user, randomStart, randomEnd);
         csvLoadUtil.loadCsvForNews(user, randomStart, randomEnd);
         csvLoadUtil.loadCsvForMacroIndicators(user, randomStart, randomEnd);
         csvLoadUtil.loadCsvForCompanyFinance(user, randomStart, randomEnd);
         csvLoadUtil.loadCsvForReddit(user, randomStart, randomEnd);
+        csvLoadUtil.loadCsvForTotalAnalysis(user, randomStart, randomEnd);
     }
 
     private double getChangeRate(Stock stock, CurrentPrice currentPrice, LocalDate date) {
