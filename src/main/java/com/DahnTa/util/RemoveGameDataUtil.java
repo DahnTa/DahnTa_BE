@@ -1,0 +1,77 @@
+package com.DahnTa.util;
+
+import com.DahnTa.entity.CurrentPrice;
+import com.DahnTa.entity.User;
+import com.DahnTa.repository.CompanyFinanceRepository;
+import com.DahnTa.repository.CurrentPriceRepository;
+import com.DahnTa.repository.GameDateRepository;
+import com.DahnTa.repository.MacroIndicatorsRepository;
+import com.DahnTa.repository.NewsRepository;
+import com.DahnTa.repository.PossessionRepository;
+import com.DahnTa.repository.RedditRepository;
+import com.DahnTa.repository.StockRepository;
+import com.DahnTa.repository.TotalAnalysisRepository;
+import java.util.List;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+
+@Component
+@Transactional
+public class RemoveGameDataUtil {
+
+    private final GameDateRepository gameDateRepository;
+    private final PossessionRepository possessionRepository;
+    private final CurrentPriceRepository currentPriceRepository;
+    private final CompanyFinanceRepository companyFinanceRepository;
+    private final MacroIndicatorsRepository macroIndicatorsRepository;
+    private final NewsRepository newsRepository;
+    private final RedditRepository redditRepository;
+    private final TotalAnalysisRepository totalAnalysisRepository;
+
+    public RemoveGameDataUtil(GameDateRepository gameDateRepository,
+        PossessionRepository possessionRepository, CurrentPriceRepository currentPriceRepository,
+        CompanyFinanceRepository companyFinanceRepository,
+        MacroIndicatorsRepository macroIndicatorsRepository, NewsRepository newsRepository,
+        RedditRepository redditRepository, TotalAnalysisRepository totalAnalysisRepository) {
+        this.gameDateRepository = gameDateRepository;
+        this.possessionRepository = possessionRepository;
+        this.currentPriceRepository = currentPriceRepository;
+        this.companyFinanceRepository = companyFinanceRepository;
+        this.macroIndicatorsRepository = macroIndicatorsRepository;
+        this.newsRepository = newsRepository;
+        this.redditRepository = redditRepository;
+        this.totalAnalysisRepository = totalAnalysisRepository;
+    }
+
+    public void gameDataRemoveByCurrentPrice(User user) {
+        currentPriceRepository.deleteByUserId(user.getId());
+    }
+
+    public void gameDataRemoveByCompanyFinance(User user) {
+        companyFinanceRepository.deleteByUserId(user.getId());
+    }
+
+    public void gameDataRemoveByMacroIndicators(User user) {
+        macroIndicatorsRepository.deleteByUserId(user.getId());
+    }
+
+    public void gameDataRemoveByNews(User user) {
+        newsRepository.deleteByUserId(user.getId());
+    }
+
+    public void gameDataRemoveByReddit(User user) {
+        redditRepository.deleteByUserId(user.getId());
+    }
+
+    public void gameDataRemoveByTotalAnalysis(User user) {
+        totalAnalysisRepository.deleteByUserId(user.getId());
+    }
+
+    public void gameDataRemoveByPossession(User user) {
+        possessionRepository.deleteByUser(user);
+    }
+
+    public void gameDataRemoveByGameDate(User user) {
+        gameDateRepository.deleteByUser(user);
+    }
+}

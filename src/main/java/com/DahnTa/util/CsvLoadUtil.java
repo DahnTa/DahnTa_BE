@@ -1,4 +1,4 @@
-package com.DahnTa.unit;
+package com.DahnTa.util;
 
 import com.DahnTa.entity.CompanyFinance;
 import com.DahnTa.entity.CurrentPrice;
@@ -7,6 +7,7 @@ import com.DahnTa.entity.News;
 import com.DahnTa.entity.Reddit;
 import com.DahnTa.entity.Stock;
 import com.DahnTa.entity.TotalAnalysis;
+import com.DahnTa.entity.User;
 import com.DahnTa.repository.CompanyFinanceRepository;
 import com.DahnTa.repository.CurrentPriceRepository;
 import com.DahnTa.repository.MacroIndicatorsRepository;
@@ -22,8 +23,10 @@ import java.util.Arrays;
 import java.util.List;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @Component
+@Transactional
 public class CsvLoadUtil {
 
     private static final List<String> STOCK_NAMES = Arrays.asList(

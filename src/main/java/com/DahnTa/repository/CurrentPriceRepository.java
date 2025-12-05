@@ -11,4 +11,5 @@ import org.springframework.stereotype.Repository;
 public interface CurrentPriceRepository extends JpaRepository<CurrentPrice, Long> {
 
     Optional<CurrentPrice> findByStockAndDate(Stock stock, LocalDate date);
+    void deleteByUserId(Long userId);
 }

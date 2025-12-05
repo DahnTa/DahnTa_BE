@@ -11,4 +11,5 @@ import org.springframework.stereotype.Repository;
 public interface RedditRepository extends JpaRepository<Reddit, Long> {
 
     Optional<Reddit> findByStockAndDate(Stock stock, LocalDate date);
+    void deleteByUserId(Long userId);
 }

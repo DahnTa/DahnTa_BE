@@ -11,4 +11,5 @@ import org.springframework.stereotype.Repository;
 public interface CompanyFinanceRepository extends JpaRepository<CompanyFinance, Long> {
 
     Optional<CompanyFinance> findByStockAndDate(Stock stock, LocalDate date);
+    void deleteByUserId(Long userId);
 }

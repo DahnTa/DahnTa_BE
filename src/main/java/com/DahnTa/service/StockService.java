@@ -20,6 +20,7 @@ import com.DahnTa.entity.Possession;
 import com.DahnTa.entity.Reddit;
 import com.DahnTa.entity.Stock;
 import com.DahnTa.entity.TotalAnalysis;
+import com.DahnTa.entity.User;
 import com.DahnTa.repository.CompanyFinanceRepository;
 import com.DahnTa.repository.CurrentPriceRepository;
 import com.DahnTa.repository.GameDateRepository;
@@ -29,7 +30,8 @@ import com.DahnTa.repository.PossessionRepository;
 import com.DahnTa.repository.RedditRepository;
 import com.DahnTa.repository.StockRepository;
 import com.DahnTa.repository.TotalAnalysisRepository;
-import com.DahnTa.unit.CsvLoadUtil;
+import com.DahnTa.util.CsvLoadUtil;
+import com.DahnTa.util.RemoveGameDataUtil;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -52,13 +54,14 @@ public class StockService {
     private final RedditRepository redditRepository;
     private final TotalAnalysisRepository totalAnalysisRepository;
     private final CsvLoadUtil csvLoadUtil;
+    private final RemoveGameDataUtil removeGameDataUtil;
 
     public StockService(GameDateRepository gameDateRepository, StockRepository stockRepository,
         PossessionRepository possessionRepository, CurrentPriceRepository currentPriceRepository,
         CompanyFinanceRepository companyFinanceRepository,
         MacroIndicatorsRepository macroIndicatorsRepository, NewsRepository newsRepository,
         RedditRepository redditRepository, TotalAnalysisRepository totalAnalysisRepository,
-        CsvLoadUtil csvLoadUtil) {
+        CsvLoadUtil csvLoadUtil, RemoveGameDataUtil removeGameDataUtil) {
         this.gameDateRepository = gameDateRepository;
         this.stockRepository = stockRepository;
         this.possessionRepository = possessionRepository;
@@ -69,6 +72,7 @@ public class StockService {
         this.redditRepository = redditRepository;
         this.totalAnalysisRepository = totalAnalysisRepository;
         this.csvLoadUtil = csvLoadUtil;
+        this.removeGameDataUtil = removeGameDataUtil;
     }
 
     public void gameStart() {
@@ -85,7 +89,7 @@ public class StockService {
         GameDate gameDate = GameDate.create(user, randomStart, randomEnd, 1);
         gameDateRepository.save(gameDate);
 
-        setGameInformation(user, randomStart, randomEnd);
+        setGameDataByUser(user, randomStart, randomEnd);
     }
 
     public void gameDateNext() {
@@ -94,7 +98,7 @@ public class StockService {
     }
 
     public void gameFinish() {
-
+        removeGameDataByUser(user);
     }
 
     public void stockBuy(Long stockId, StockBuyRequest request) {
@@ -239,13 +243,25 @@ public class StockService {
             totalAnalysis.getAnalyze());
     }
 
-    private void setGameInformation(User user, LocalDate randomStart, LocalDate randomEnd) {
+    private void setGameDataByUser(User user, LocalDate randomStart, LocalDate randomEnd) {
         csvLoadUtil.loadCsvForCurrentPrice(user, randomStart, randomEnd);
         csvLoadUtil.loadCsvForNews(user, randomStart, randomEnd);
         csvLoadUtil.loadCsvForMacroIndicators(user, randomStart, randomEnd);
         csvLoadUtil.loadCsvForCompanyFinance(user, randomStart, randomEnd);
         csvLoadUtil.loadCsvForReddit(user, randomStart, randomEnd);
         csvLoadUtil.loadCsvForTotalAnalysis(user, randomStart, randomEnd);
+    }
+
+    private void removeGameDataByUser(User user) {
+        removeGameDataUtil.gameDataRemoveByCurrentPrice(user);
+        removeGameDataUtil.gameDataRemoveByCompanyFinance(user);
+        removeGameDataUtil.gameDataRemoveByMacroIndicators(user);
+        removeGameDataUtil.gameDataRemoveByNews(user);
+        removeGameDataUtil.gameDataRemoveByReddit(user);
+        removeGameDataUtil.gameDataRemoveByTotalAnalysis(user);
+        removeGameDataUtil.gameDataRemoveByPossession(user);
+        removeGameDataUtil.gameDataRemoveByGameDate(user);
+        // 관심종목, 거래내역 삭제
     }
 
     private double getChangeRate(Stock stock, CurrentPrice currentPrice, LocalDate date) {
