@@ -101,7 +101,7 @@ public class CsvLoadUtil {
 
             for (String[] data : rows) {
                 LocalDate date = LocalDate.parse(data[0]);
-                newsRepository.save(News.create(stock, date, data[1], data[2], user.getId()));
+                newsRepository.save(News.create(stock, date, data[2], user.getId()));
             }
         }
     }
@@ -111,7 +111,7 @@ public class CsvLoadUtil {
 
         for (String[] data : rows) {
             LocalDate date = LocalDate.parse(data[0]);
-            macroIndicatorsRepository.save(MacroIndicators.create(date, data[1], data[2], user.getId()));
+            macroIndicatorsRepository.save(MacroIndicators.create(date, data[2], user.getId()));
         }
     }
 
@@ -123,7 +123,7 @@ public class CsvLoadUtil {
             for (String[] data : rows) {
                 LocalDate date = LocalDate.parse(data[0]);
                 companyFinanceRepository.save(
-                    CompanyFinance.create(stock, date, data[1], data[2], user.getId()));
+                    CompanyFinance.create(stock, date, data[2], user.getId()));
             }
         }
     }

@@ -187,7 +187,7 @@ public class StockService {
 
         News news = getNewsByStockAndDate(stock, today);
 
-        return StockNewsResponse.create(news.getDate(), news.getDisclaimer(), news.getContent());
+        return StockNewsResponse.create(news.getDate(), news.getContent());
     }
 
     public StockCompanyFinanceResponse getStockCompanyFinance(User user, Long stockId) {
@@ -196,8 +196,7 @@ public class StockService {
 
         CompanyFinance companyFinance = getCompanyFinanceByStockAndDate(stock, today);
 
-        return StockCompanyFinanceResponse.create(companyFinance.getDate(), companyFinance.getDisclaimer(),
-            companyFinance.getContent());
+        return StockCompanyFinanceResponse.create(companyFinance.getDate(), companyFinance.getContent());
     }
 
     public MacroIndicatorsResponse getMacroIndicators(User user) {
@@ -205,8 +204,7 @@ public class StockService {
 
         MacroIndicators macroIndicators = getMacroIndicatorsByStockAndDate(today);
 
-        return MacroIndicatorsResponse.create(macroIndicators.getDate(), macroIndicators.getDisclaimer(),
-            macroIndicators.getContent());
+        return MacroIndicatorsResponse.create(macroIndicators.getDate(), macroIndicators.getContent());
     }
 
     public StockRedditResponse getReddit(User user, Long stockId) {
