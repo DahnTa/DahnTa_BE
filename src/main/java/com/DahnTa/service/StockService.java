@@ -5,6 +5,7 @@ import com.DahnTa.dto.MarketPrices;
 import com.DahnTa.dto.request.StockBuyRequest;
 import com.DahnTa.dto.response.MacroIndicatorsResponse;
 import com.DahnTa.dto.response.StockCompanyFinanceResponse;
+import com.DahnTa.dto.response.StockGameResultResponse;
 import com.DahnTa.dto.response.StockListResponse;
 import com.DahnTa.dto.response.StockNewsResponse;
 import com.DahnTa.dto.response.StockOrderResponse;
@@ -43,6 +44,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional
 public class StockService {
+
+    private static final int INITIAL_FUNDS = 10000000;
 
     private final GameDateRepository gameDateRepository;
     private final StockRepository stockRepository;
@@ -243,6 +246,21 @@ public class StockService {
             totalAnalysis.getAnalyze());
     }
 
+    public StockGameResultResponse gatGameResult() {
+        int totalReturnRate = 0;
+        List<Possession> possessions = getPossessionByUser(user);
+        LocalDate today = getToday(user);
+        for (Possession possession : possessions) {
+            CurrentPrice currentPrice = getCurrentPriceByStockAndDate(possession.getStock(), today);
+            totalReturnRate += possession.calculateAmount(currentPrice.getCurrentPrice());
+        }
+
+        int finalAmount = user.calculateFinalAmount(totalReturnRate);
+        double finalReturnRate = user.calculateReturnRate(finalAmount, INITIAL_FUNDS);
+
+        return StockGameResultResponse.create(finalReturnRate, INITIAL_FUNDS, finalAmount);
+    }
+
     private void setGameDataByUser(User user, LocalDate randomStart, LocalDate randomEnd) {
         csvLoadUtil.loadCsvForCurrentPrice(user, randomStart, randomEnd);
         csvLoadUtil.loadCsvForNews(user, randomStart, randomEnd);
@@ -261,7 +279,7 @@ public class StockService {
         removeGameDataUtil.gameDataRemoveByTotalAnalysis(user);
         removeGameDataUtil.gameDataRemoveByPossession(user);
         removeGameDataUtil.gameDataRemoveByGameDate(user);
-        // 관심종목, 거래내역 삭제
+        // 관심종목, 거래내역도 삭제
     }
 
     private double getChangeRate(Stock stock, CurrentPrice currentPrice, LocalDate date) {
@@ -317,28 +335,33 @@ public class StockService {
             .orElseThrow(() -> new IllegalArgumentException("해당 날짜의 주식 가격을 찾을 수 없습니다."));
     }
 
-    private News getNewsByStockAndDate(Stock stock, LocalDate date){
+    private News getNewsByStockAndDate(Stock stock, LocalDate date) {
         return newsRepository.findByStockAndDate(stock, date)
             .orElseThrow(() -> new IllegalArgumentException("해당 날짜의 주식 뉴스를 찾을 수 없습니다."));
     }
 
-    private CompanyFinance getCompanyFinanceByStockAndDate(Stock stock, LocalDate date){
+    private CompanyFinance getCompanyFinanceByStockAndDate(Stock stock, LocalDate date) {
         return companyFinanceRepository.findByStockAndDate(stock, date)
             .orElseThrow(() -> new IllegalArgumentException("해당 날짜의 주식 재무제표를 찾을 수 없습니다."));
     }
 
-    private MacroIndicators getMacroIndicatorsByStockAndDate(LocalDate date){
+    private MacroIndicators getMacroIndicatorsByStockAndDate(LocalDate date) {
         return macroIndicatorsRepository.findByDate(date)
             .orElseThrow(() -> new IllegalArgumentException("해당 날짜의 거시경제를 찾을 수 없습니다."));
     }
 
-    private Reddit getRedditByStockAndDate(Stock stock, LocalDate date){
+    private Reddit getRedditByStockAndDate(Stock stock, LocalDate date) {
         return redditRepository.findByStockAndDate(stock, date)
             .orElseThrow(() -> new IllegalArgumentException("해당 날짜의 주식 Reddit을 찾을 수 없습니다."));
     }
 
-    private TotalAnalysis getTotalAnalysisByStockAndDate(Stock stock, LocalDate date){
+    private TotalAnalysis getTotalAnalysisByStockAndDate(Stock stock, LocalDate date) {
         return totalAnalysisRepository.findByStockAndDate(stock, date)
             .orElseThrow(() -> new IllegalArgumentException("해당 날짜의 주식 종합분석을 찾을 수 없습니다."));
+    }
+
+    private List<Possession> getPossessionByUser(User user) {
+
+        return possessionRepository.findByUser(user);
     }
 }

@@ -59,6 +59,10 @@ public class Possession {
         this.quantity -= quantity;
     }
 
+    public int calculateAmount(int stockCurrentPrice) {
+        return this.getQuantity() * stockCurrentPrice;
+    }
+
     public void validateSellQuantity(int sellQuantity) {
         if (this.quantity < sellQuantity) {
             throw new IllegalArgumentException("보유 수량보다 많이 팔 수 없습니다.");

@@ -72,4 +72,11 @@ public class User {
         this.userPassword = userPassword;
     }
 
+    public int calculateFinalAmount(int totalReturnRate) {
+        return this.userCredit + totalReturnRate;
+    }
+
+    public double calculateReturnRate(int finalAmount, int initialFunds) {
+        return ((double) finalAmount - initialFunds) / initialFunds * 100.0;
+    }
 }

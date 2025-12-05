@@ -4,6 +4,7 @@ import com.DahnTa.dto.request.StockBuyRequest;
 import com.DahnTa.dto.request.StockSellRequest;
 import com.DahnTa.dto.response.MacroIndicatorsResponse;
 import com.DahnTa.dto.response.StockCompanyFinanceResponse;
+import com.DahnTa.dto.response.StockGameResultResponse;
 import com.DahnTa.dto.response.StockListResponse;
 import com.DahnTa.dto.response.StockNewsResponse;
 import com.DahnTa.dto.response.StockOrderResponse;
@@ -121,6 +122,13 @@ public class StockController {
     public ResponseEntity<StockTotalAnalysisResponse> getTotalAnalysis(
         @PathVariable(name = "id") Long stockId) {
         StockTotalAnalysisResponse response = stockService.getTotalAnalysis(stockId);
+
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @GetMapping("/result")
+    public ResponseEntity<StockGameResultResponse> gatGameResult() {
+        StockGameResultResponse response = stockService.gatGameResult();
 
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
