@@ -11,4 +11,5 @@ import org.springframework.stereotype.Repository;
 public interface TotalAnalysisRepository extends JpaRepository<TotalAnalysis, Long> {
 
     Optional<TotalAnalysis> findByStockAndDate(Stock stock, LocalDate date);
+    void deleteByUserId(Long userId);
 }

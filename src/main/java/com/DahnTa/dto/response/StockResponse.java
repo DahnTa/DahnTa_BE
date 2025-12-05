@@ -6,10 +6,10 @@ import lombok.Builder;
 
 @Builder
 public record StockResponse(String stockName, String stockTag, List<MarketPrices> marketPrices,
-                            int currentPrice, double changeRate) {
+                            double currentPrice, double changeRate) {
 
     public static StockResponse create(String stockName, String stockTag, List<MarketPrices> marketPrices,
-        int currentPrice, double changeRate) {
+        double currentPrice, double changeRate) {
 
         return StockResponse.builder()
             .stockName(stockName)
