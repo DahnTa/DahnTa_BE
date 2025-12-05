@@ -24,7 +24,7 @@ public class User {
     private String userPassword;
 
     @Column(name = "userCredit", nullable = false)
-    private int userCredit;
+    private double userCredit;
 
     @Column(name = "userNickName", nullable = true)
     private String userNickName;
@@ -34,7 +34,7 @@ public class User {
 
 
     public User(String userAccount, String userPassword,
-        String userNickName, int userCredit, String userProfileImageUrl) {
+        String userNickName, double userCredit, String userProfileImageUrl) {
         this.userProfileImageUrl = userProfileImageUrl;
         this.userNickName = userNickName;
         this.userCredit = userCredit;
@@ -55,7 +55,7 @@ public class User {
         return userPassword;
     }
 
-    public int getUserCredit() {
+    public double getUserCredit() {
         return userCredit;
     }
 
@@ -72,19 +72,19 @@ public class User {
         this.userPassword = userPassword;
     }
 
-    public void increaseCredit(int amount) {
+    public void increaseCredit(double amount) {
         this.userCredit += amount;
     }
 
-    public void deductCredit(int amount) {
+    public void deductCredit(double amount) {
         this.userCredit -= amount;
     }
-    
-    public int calculateFinalAmount(int totalReturnRate) {
+
+    public double calculateFinalAmount(double totalReturnRate) {
         return this.userCredit + totalReturnRate;
     }
 
-    public double calculateReturnRate(int finalAmount, int initialFunds) {
+    public double calculateReturnRate(double finalAmount, double initialFunds) {
         return ((double) finalAmount - initialFunds) / initialFunds * 100.0;
     }
 }

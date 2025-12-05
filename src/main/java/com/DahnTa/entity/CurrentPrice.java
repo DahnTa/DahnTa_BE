@@ -31,10 +31,10 @@ public class CurrentPrice {
     private LocalDate date;
 
     @Column(name = "current_price", nullable = false)
-    private int currentPrice;
+    private double currentPrice;
 
     @Column(name = "market_price", nullable = false)
-    private int marketPrice;
+    private double marketPrice;
 
     @Column(name = "user_id", nullable = false)
     private Long userId;
@@ -42,7 +42,7 @@ public class CurrentPrice {
     protected CurrentPrice() {
     }
 
-    private CurrentPrice(Stock stock, LocalDate date, int currentPrice, int marketPrice, Long userId) {
+    private CurrentPrice(Stock stock, LocalDate date, double currentPrice, double marketPrice, Long userId) {
         this.stock = stock;
         this.date = date;
         this.currentPrice = currentPrice;
@@ -51,7 +51,7 @@ public class CurrentPrice {
     }
 
     @Builder
-    public static CurrentPrice create(Stock stock, LocalDate date, int currentPrice, int marketPrice,
+    public static CurrentPrice create(Stock stock, LocalDate date, double currentPrice, double marketPrice,
         Long userId) {
 
         return CurrentPrice.builder()
@@ -68,17 +68,17 @@ public class CurrentPrice {
         return ((double) (this.currentPrice - previous.currentPrice) / previous.currentPrice) * 100.0;
     }
 
-    public int calculateChangeAmount(CurrentPrice previous) {
+    public double calculateChangeAmount(CurrentPrice previous) {
 
         return this.currentPrice - previous.currentPrice;
     }
 
-    public int calculateAvailableOrderAmount(int userCredit) {
+    public double calculateAvailableOrderAmount(double userCredit) {
 
         return userCredit / this.currentPrice * this.currentPrice;
     }
 
-    public void validateBuyQuantity(int userCredit, int buyQuantity) {
+    public void validateBuyQuantity(double userCredit, double buyQuantity) {
         if (userCredit > this.currentPrice * buyQuantity) {
             throw new IllegalArgumentException("사용자의 보유 금액이 부족합니다.");
         }

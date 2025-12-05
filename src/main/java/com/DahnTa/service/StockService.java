@@ -45,7 +45,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class StockService {
 
-    private static final int INITIAL_FUNDS = 10000000;
+    private static final int INITIAL_FUNDS = 10000;
 
     private final GameDateRepository gameDateRepository;
     private final StockRepository stockRepository;
@@ -78,7 +78,7 @@ public class StockService {
         this.removeGameDataUtil = removeGameDataUtil;
     }
 
-    public void gameStart() {
+    public void gameStart(User user) {
         LocalDate start = LocalDate.of(2024, 10, 1);
         LocalDate end = LocalDate.of(2025, 10, 1);
         LocalDate lastestStart = end.minusDays(29);
@@ -95,21 +95,21 @@ public class StockService {
         setGameDataByUser(user, randomStart, randomEnd);
     }
 
-    public void gameDateNext() {
+    public void gameDateNext(User user) {
         GameDate gameDate = getGameDateByUser(user);
         gameDate.updateDay();
     }
 
-    public void gameFinish() {
+    public void gameFinish(User user) {
         removeGameDataByUser(user);
     }
 
-    public void stockBuy(Long stockId, StockBuyRequest request) {
+    public void stockBuy(User user, Long stockId, StockBuyRequest request) {
         Stock stock = getStockByStockId(stockId);
         LocalDate today = getToday(user);
         CurrentPrice currentPrice = getCurrentPriceByStockAndDate(stock, today);
 
-        currentPrice.validateBuyQuantity(user.getUserCredit, request.getQuantity());
+        currentPrice.validateBuyQuantity(user.getUserCredit(), request.getQuantity());
 
         Possession possession = getPossessionByStockAndUser(stock, user);
         if (possession == null) {
@@ -120,7 +120,7 @@ public class StockService {
         user.deductCredit(currentPrice.getCurrentPrice() * request.getQuantity());
     }
 
-    public void stockSell(Long stockId, StockBuyRequest request) {
+    public void stockSell(User user, Long stockId, StockBuyRequest request) {
         Stock stock = getStockByStockId(stockId);
         LocalDate today = getToday(user);
 
@@ -139,7 +139,7 @@ public class StockService {
         user.increaseCredit(currentPrice.getCurrentPrice() * request.getQuantity());
     }
 
-    public StockListResponse getStockList() {
+    public StockListResponse getStockList(User user) {
         List<Stock> stocks = stockRepository.findAll();
         LocalDate today = getToday(user);
 
@@ -155,7 +155,7 @@ public class StockService {
         return StockListResponse.create(dashBoards);
     }
 
-    public StockResponse getStock(Long stockId) {
+    public StockResponse getStock(User user, Long stockId) {
         Stock stock = getStockByStockId(stockId);
         LocalDate today = getToday(user);
         CurrentPrice currentPrice = getCurrentPriceByStockAndDate(stock, today);
@@ -166,7 +166,7 @@ public class StockService {
             currentPrice.getCurrentPrice(), getChangeRate(stock, currentPrice, today));
     }
 
-    public StockOrderResponse getStockOrder(Long stockId) {
+    public StockOrderResponse getStockOrder(User user, Long stockId) {
         int quantity = 0;
         Stock stock = getStockByStockId(stockId);
         Possession possession = getPossessionByStockAndUser(stock, user);
@@ -178,10 +178,10 @@ public class StockService {
         CurrentPrice currentPrice = getCurrentPriceByStockAndDate(stock, today);
 
         return StockOrderResponse.create(quantity, ,
-            currentPrice.calculateAvailableOrderAmount(user.getUserCredit));
+            currentPrice.calculateAvailableOrderAmount(user.getUserCredit()));
     }
 
-    public StockNewsResponse getStockNews(Long stockId) {
+    public StockNewsResponse getStockNews(User user, Long stockId) {
         Stock stock = getStockByStockId(stockId);
         LocalDate today = getToday(user);
 
@@ -190,7 +190,7 @@ public class StockService {
         return StockNewsResponse.create(news.getDate(), news.getDisclaimer(), news.getContent());
     }
 
-    public StockCompanyFinanceResponse getStockCompanyFinance(Long stockId) {
+    public StockCompanyFinanceResponse getStockCompanyFinance(User user, Long stockId) {
         Stock stock = getStockByStockId(stockId);
         LocalDate today = getToday(user);
 
@@ -200,7 +200,7 @@ public class StockService {
             companyFinance.getContent());
     }
 
-    public MacroIndicatorsResponse getMacroIndicators() {
+    public MacroIndicatorsResponse getMacroIndicators(User user) {
         LocalDate today = getToday(user);
 
         MacroIndicators macroIndicators = getMacroIndicatorsByStockAndDate(today);
@@ -209,7 +209,7 @@ public class StockService {
             macroIndicators.getContent());
     }
 
-    public StockRedditResponse getReddit(Long stockId) {
+    public StockRedditResponse getReddit(User user, Long stockId) {
         Stock stock = getStockByStockId(stockId);
         LocalDate today = getToday(user);
 
@@ -219,7 +219,7 @@ public class StockService {
             reddit.getNumComment());
     }
 
-    public StockTotalAnalysisResponse getTotalAnalysis(Long stockId) {
+    public StockTotalAnalysisResponse getTotalAnalysis(User user, Long stockId) {
         Stock stock = getStockByStockId(stockId);
         LocalDate today = getToday(user);
 
@@ -229,8 +229,8 @@ public class StockService {
             totalAnalysis.getAnalyze());
     }
 
-    public StockGameResultResponse gatGameResult() {
-        int totalReturnRate = 0;
+    public StockGameResultResponse gatGameResult(User user) {
+        double totalReturnRate = 0;
         List<Possession> possessions = getPossessionByUser(user);
         LocalDate today = getToday(user);
         for (Possession possession : possessions) {
@@ -238,7 +238,7 @@ public class StockService {
             totalReturnRate += possession.calculateAmount(currentPrice.getCurrentPrice());
         }
 
-        int finalAmount = user.calculateFinalAmount(totalReturnRate);
+        double finalAmount = user.calculateFinalAmount(totalReturnRate);
         double finalReturnRate = user.calculateReturnRate(finalAmount, INITIAL_FUNDS);
 
         return StockGameResultResponse.create(finalReturnRate, INITIAL_FUNDS, finalAmount);
@@ -270,7 +270,7 @@ public class StockService {
         return currentPrice.calculateChangeRate(yesterdayPrice);
     }
 
-    private int getChangeAmount(Stock stock, CurrentPrice currentPrice, LocalDate date) {
+    private double getChangeAmount(Stock stock, CurrentPrice currentPrice, LocalDate date) {
         CurrentPrice yesterdayPrice = getCurrentPriceByStockAndDate(stock, date.minusDays(1));
         return currentPrice.calculateChangeAmount(yesterdayPrice);
     }
