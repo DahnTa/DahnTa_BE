@@ -117,16 +117,7 @@ public class StockService {
             possessionRepository.save(possession);
         }
         possession.increaseQuantity(request.getQuantity());
-
-        /*
-        user.deductCredit(currentPrice.getCurrentPrice*request.getQuantity());
-        ┎─────────────────────────────────────────────┐
-            User 도메인에 작성 ↓
-            public void deductCredit(int amount) {
-                this.credit -= amount;
-            }
-        └─────────────────────────────────────────────┘
-         */
+        user.deductCredit(currentPrice.getCurrentPrice() * request.getQuantity());
     }
 
     public void stockSell(Long stockId, StockBuyRequest request) {
@@ -145,15 +136,7 @@ public class StockService {
         }
 
         CurrentPrice currentPrice = getCurrentPriceByStockAndDate(stock, today);
-        /*
-        user.increaseCredit(currentPrice.getCurrentPrice*getQuantity.quantity());
-        ┎─────────────────────────────────────────────┐
-            User 도메인에 작성 ↓
-            public void increaseCredit(int amount) {
-                this.credit += amount;
-            }
-        └─────────────────────────────────────────────┘
-         */
+        user.increaseCredit(currentPrice.getCurrentPrice() * request.getQuantity());
     }
 
     public StockListResponse getStockList() {

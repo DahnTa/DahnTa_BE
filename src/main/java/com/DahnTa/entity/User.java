@@ -72,6 +72,14 @@ public class User {
         this.userPassword = userPassword;
     }
 
+    public void increaseCredit(int amount) {
+        this.userCredit += amount;
+    }
+
+    public void deductCredit(int amount) {
+        this.userCredit -= amount;
+    }
+    
     public int calculateFinalAmount(int totalReturnRate) {
         return this.userCredit + totalReturnRate;
     }
