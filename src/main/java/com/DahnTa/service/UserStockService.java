@@ -23,6 +23,7 @@ import com.DahnTa.repository.StockRepository;
 import com.DahnTa.repository.TransactionRepository;
 import com.DahnTa.repository.UserRepository;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -53,35 +54,24 @@ public class UserStockService {
 
     public HoldingsListResponseDTO getHoldings(String bearerToken) {
         Long userId = extractUserIdFromToken(bearerToken);
-
-        // 보유 주식 가져옴
         List<Possession> possessions = possessionRepository.findAllByUserId(userId);
 
         List<HoldingsResponseDTO> dtoList = possessions.stream()
             .map(p -> {
-                Stock stock = p.getStock();
-                int quantity = p.getQuantity();
-
-                CurrentPrice priceEntity = currentPriceRepository
-                    .findTop1ByStockIdOrderByDateDesc(stock.getId())
-                    .orElseThrow(() -> new IllegalStateException("가격 정보 없음: " + stock.getStockName()));
+                CurrentPrice priceEntity = fetchCurrentPrice(p.getStock());
 
                 double currentPrice = priceEntity.getCurrentPrice();
                 double marketPrice = priceEntity.getMarketPrice();
 
                 // 변동률 계산
-                double changeRate = 0.0;
-                if (marketPrice > 0) {
-                    changeRate = ((currentPrice - marketPrice) / marketPrice) * 100.0;
-                }
-
-                // 평가금액 계산
-                double valuation = currentPrice * quantity;
+                double changeRate = calculateChangeRate(currentPrice, marketPrice);
+                // 평가금 계산
+                double valuation = currentPrice * p.getQuantity();
 
                 return new HoldingsResponseDTO(
-                    stock.getStockName(),
-                    stock.getStockTag(),
-                    quantity,
+                    p.getStock().getStockName(),
+                    p.getStock().getStockTag(),
+                    p.getQuantity(),
                     changeRate,
                     valuation
                 );
@@ -90,41 +80,27 @@ public class UserStockService {
 
         return new HoldingsListResponseDTO(dtoList);
     }
-    public AssetResponseDTO getAssets(String bearerToken) {
 
+
+    public AssetResponseDTO getAssets(String bearerToken) {
         Long userId = extractUserIdFromToken(bearerToken);
 
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "User not found"));
 
-        double userCredit = user.getUserCredit();   // 현재 보유 현금
-
-        // stockValuation 계산
+        double userCredit = user.getUserCredit();
         List<Possession> possessions = possessionRepository.findAllByUserId(userId);
 
         double stockValuation = possessions.stream()
             .mapToDouble(p -> {
-                Long stockId = p.getStock().getId();
-                int quantity = p.getQuantity();
-
-                // 최신 주가
-                CurrentPrice price = currentPriceRepository
-                    .findTop1ByStockIdOrderByDateDesc(stockId)
-                    .orElseThrow(() -> new IllegalStateException("No price data"));
-
-                return price.getCurrentPrice() * quantity;
+                CurrentPrice price = fetchCurrentPrice(p.getStock());
+                return price.getCurrentPrice() * p.getQuantity();
             })
             .sum();
 
-        // totalAmount
         double totalAmount = userCredit + stockValuation;
-
-        // 변동액 (시드머니 필요)
-        double seedMoney = 10000000;      // 천만원
-
+        double seedMoney = 10000000.0;
         double creditChangeAmount = totalAmount - seedMoney;
-
-        // 변동률
         double creditChangeRate = (creditChangeAmount / seedMoney) * 100;
 
         return new AssetResponseDTO(
@@ -135,7 +111,6 @@ public class UserStockService {
             stockValuation
         );
     }
-
 
     public List<InterestResponseDTO> getInterestList(String bearerToken) {
         Long userId = extractUserIdFromToken(bearerToken);
@@ -183,6 +158,7 @@ public class UserStockService {
         interestRepository.delete(interest);
     }
 
+
     @Transactional
     public void applyLike(Long stockId, String bearerToken) {
         Long userId = extractUserIdFromToken(bearerToken);
@@ -203,11 +179,10 @@ public class UserStockService {
     public TransactionListResponseDTO getTransactionHistory(String bearerToken) {
         Long userId = extractUserIdFromToken(bearerToken);
 
-        List<Transaction> transactions =
-            transactionRepository.findAllByUserId(userId);
+        List<Transaction> transactions = transactionRepository.findAllByUserId(userId);
 
         List<TransactionResponseDTO> mapped = transactions.stream()
-            .map(TransactionResponseDTO::from)
+            .map(this::toTransactionDTO)
             .toList();
 
         return new TransactionListResponseDTO(mapped);
@@ -227,9 +202,39 @@ public class UserStockService {
         return jwtService.extractUserId(token);
     }
 
+
     private Stock validateStock(Long stockId) {
         return stockRepository.findById(stockId)
             .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Stock not found"));
+    }
+
+
+    private CurrentPrice fetchCurrentPrice(Stock stock) {
+        Optional<CurrentPrice> priceBox = currentPriceRepository
+            .findTop1ByStockIdOrderByDateDesc(stock.getId());
+
+        if (priceBox.isEmpty()) {
+            throw new IllegalStateException("가격 정보 없음: " + stock.getStockName());
+        }
+
+        return priceBox.get();
+    }
+
+    private double calculateChangeRate(double current, double market) {
+        if (market <= 0) return 0.0;
+        return ((current - market) / market) * 100.0;
+    }
+
+    // Entity → DTO 변환 전용 메서드
+    private TransactionResponseDTO toTransactionDTO(Transaction tx) {
+        return new TransactionResponseDTO(
+            tx.getDate(),
+            tx.getStock().getStockName(),
+            tx.getStock().getStockTag(),
+            tx.getType(),
+            tx.getQuantity(),
+            tx.getTotalAmount()
+        );
     }
 
 }
