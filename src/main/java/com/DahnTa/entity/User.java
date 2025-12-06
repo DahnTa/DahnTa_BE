@@ -7,12 +7,14 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "USER_TB")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Builder
 @Getter
 public class User {
     @Id
@@ -34,7 +36,7 @@ public class User {
     @Column(name = "user_profile_image_url", nullable = true)
     private String userProfileImageUrl;
 
-
+    @Builder
     public User(String userAccount, String userPassword,
         String userNickName, int userCredit, String userProfileImageUrl) {
         this.userProfileImageUrl = userProfileImageUrl;

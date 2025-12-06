@@ -1,9 +1,10 @@
 package com.DahnTa.dto.response;
 
-import com.DahnTa.entity.Transaction;
 import com.DahnTa.entity.TransactionType;
 import java.time.LocalDate;
+import lombok.Builder;
 
+@Builder
 public record TransactionResponseDTO(
     LocalDate date,
     String stockName,
@@ -13,15 +14,4 @@ public record TransactionResponseDTO(
     double totalAmount
 ) {
 
-
-    public static TransactionResponseDTO from(Transaction tx) {
-        return new TransactionResponseDTO(
-            tx.getDate(),
-            tx.getStock().getStockName(),
-            tx.getStock().getStockTag(),
-            tx.getType(),
-            tx.getQuantity(),
-            tx.getTotalAmount()
-        );
-    }
 }
