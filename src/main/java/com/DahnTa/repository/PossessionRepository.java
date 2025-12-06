@@ -16,4 +16,11 @@ public interface PossessionRepository extends JpaRepository<Possession, Long> {
     boolean existsByStockAndUser(Stock stock, User user);
 
     List<Possession> findAllByUserId(Long userId);
+
+    boolean existsByStockAnUser(Stock stock, User user);
+  
+    void deleteByUser(User user);
+     
+    List<Possession> findByUser(User user);
+
 }

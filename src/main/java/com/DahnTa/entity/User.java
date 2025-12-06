@@ -28,7 +28,7 @@ public class User {
     private String userPassword;
 
     @Column(name = "user_credit", nullable = false)
-    private int userCredit;
+    private double userCredit;
 
     @Column(name = "user_nickname", nullable = true)
     private String userNickName;
@@ -38,7 +38,7 @@ public class User {
 
     @Builder
     public User(String userAccount, String userPassword,
-        String userNickName, int userCredit, String userProfileImageUrl) {
+        String userNickName, double userCredit, String userProfileImageUrl) {
         this.userProfileImageUrl = userProfileImageUrl;
         this.userNickName = userNickName;
         this.userCredit = userCredit;
@@ -55,5 +55,21 @@ public class User {
         if (!this.userPassword.equals(inputPassword)) {
             throw new RuntimeException("Password incorrect");
         }
+
+    public void increaseCredit(double amount) {
+        this.userCredit += amount;
+    }
+
+    public void deductCredit(double amount) {
+        this.userCredit -= amount;
+    }
+
+    public double calculateFinalAmount(double totalReturnRate) {
+        return this.userCredit + totalReturnRate;
+    }
+
+    public double calculateReturnRate(double finalAmount, double initialFunds) {
+        return ((double) finalAmount - initialFunds) / initialFunds * 100.0;
+
     }
 }

@@ -30,9 +30,6 @@ public class CompanyFinance {
     @Column(name = "date", nullable = false)
     private LocalDate date;
 
-    @Column(name = "disclaimer", nullable = false)
-    private String disclaimer;
-
     @Column(name = "content", nullable = false)
     private String content;
 
@@ -42,22 +39,20 @@ public class CompanyFinance {
     protected CompanyFinance() {
     }
 
-    private CompanyFinance(Stock stock, LocalDate date, String disclaimer, String content, Long userId) {
+    private CompanyFinance(Stock stock, LocalDate date, String content, Long userId) {
         this.stock = stock;
         this.date = date;
-        this.disclaimer = disclaimer;
         this.content = content;
         this.userId = userId;
     }
 
     @Builder
-    public static CompanyFinance create(Stock stock, LocalDate date, String disclaimer, String content,
+    public static CompanyFinance create(Stock stock, LocalDate date, String content,
         Long userId) {
 
         return CompanyFinance.builder()
             .stock(stock)
             .date(date)
-            .disclaimer(disclaimer)
             .content(content)
             .userId(userId)
             .build();

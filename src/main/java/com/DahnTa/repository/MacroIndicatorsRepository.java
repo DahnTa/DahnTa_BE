@@ -10,4 +10,5 @@ import org.springframework.stereotype.Repository;
 public interface MacroIndicatorsRepository extends JpaRepository<MacroIndicators, Long> {
 
     Optional<MacroIndicators> findByDate(LocalDate date);
+    void deleteByUserId(Long userId);
 }
