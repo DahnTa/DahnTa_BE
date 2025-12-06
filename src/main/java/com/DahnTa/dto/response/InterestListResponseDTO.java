@@ -5,6 +5,6 @@ import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
 public class InterestListResponseDTO {
-    List<InterestResponseDTO> interestResponseDTOList;
+    List<InterestResponseDTO> interests;
 
 }
