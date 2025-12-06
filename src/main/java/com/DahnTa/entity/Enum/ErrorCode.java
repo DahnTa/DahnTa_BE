@@ -10,7 +10,6 @@ public enum ErrorCode {
     PRICE_NOT_FOUND("해당 날짜의 주식 가격을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
     POSSESSION_NOT_FOUND("해당 주식을 보유하고 있지 않습니다.", HttpStatus.BAD_REQUEST),
     INSUFFICIENT_CREDIT("보유 금액이 부족합니다.", HttpStatus.BAD_REQUEST),
-    INVALID_QUANTITY("수량이 유효하지 않습니다.", HttpStatus.BAD_REQUEST),
     GAME_DATE_NOT_FOUND("해당 user의 GameDate를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
     COMPANY_FINANCE_NOT_FOUND("해당 날짜의 주식 재무제표를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
     MACRO_INDICATORS_NOT_FOUND("해당 날짜의 거시경제 지표를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),

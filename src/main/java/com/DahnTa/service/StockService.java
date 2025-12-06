@@ -15,7 +15,9 @@ import com.DahnTa.dto.response.StockResponse;
 import com.DahnTa.dto.response.StockTotalAnalysisResponse;
 import com.DahnTa.entity.CompanyFinance;
 import com.DahnTa.entity.CurrentPrice;
+import com.DahnTa.entity.Enum.DateOffset;
 import com.DahnTa.entity.Enum.ErrorCode;
+import com.DahnTa.entity.Enum.GameDateSetting;
 import com.DahnTa.entity.Enum.TransactionType;
 import com.DahnTa.entity.GameDate;
 import com.DahnTa.entity.MacroIndicators;
@@ -51,7 +53,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class StockService {
 
-    private static final int INITIAL_FUNDS = 10000;
+    private static final double INITIAL_FUNDS = 10000.0;
+    private static final int ONE_TRANSACTION = 1;
 
     private final GameDateRepository gameDateRepository;
     private final StockRepository stockRepository;
@@ -88,17 +91,19 @@ public class StockService {
     }
 
     public void gameStart(User user) {
-        LocalDate start = LocalDate.of(2024, 10, 1);
-        LocalDate end = LocalDate.of(2025, 10, 1);
-        LocalDate lastestStart = end.minusDays(29);
+        LocalDate start = GameDateSetting.START.getDateValue();
+        LocalDate end = GameDateSetting.END.getDateValue();
+        LocalDate lastestStart = end.minusDays(GameDateSetting.DAYS_TO_SUBTRACT.getNumberValue());
 
         long days = ChronoUnit.DAYS.between(start, lastestStart);
-        long randomOffset = ThreadLocalRandom.current().nextLong(0, days + 1);
+        long randomOffset = ThreadLocalRandom.current()
+            .nextLong(0, days + GameDateSetting.START_DAY.getNumberValue());
 
         LocalDate randomStart = start.plusDays(randomOffset);
-        LocalDate randomEnd = randomStart.plusDays(19);
+        LocalDate randomEnd = randomStart.plusDays(GameDateSetting.DAY_DURATION.getNumberValue());
 
-        GameDate gameDate = GameDate.create(user, randomStart, randomEnd, 1);
+        GameDate gameDate = GameDate.create(user, randomStart, randomEnd,
+            GameDateSetting.START_DAY.getNumberValue());
         gameDateRepository.save(gameDate);
 
         setGameDataByUser(user, randomStart, randomEnd);
@@ -275,12 +280,14 @@ public class StockService {
     }
 
     private double getChangeRate(Stock stock, CurrentPrice currentPrice, LocalDate date) {
-        CurrentPrice yesterdayPrice = getCurrentPriceByStockAndDate(stock, date.minusDays(1));
+        CurrentPrice yesterdayPrice = getCurrentPriceByStockAndDate(stock, date.minusDays(
+            DateOffset.PREVIOUS_DAY.getDays()));
         return currentPrice.calculateChangeRate(yesterdayPrice);
     }
 
     private double getChangeAmount(Stock stock, CurrentPrice currentPrice, LocalDate date) {
-        CurrentPrice yesterdayPrice = getCurrentPriceByStockAndDate(stock, date.minusDays(1));
+        CurrentPrice yesterdayPrice = getCurrentPriceByStockAndDate(stock,
+            date.minusDays(DateOffset.PREVIOUS_DAY.getDays()));
         return currentPrice.calculateChangeAmount(yesterdayPrice);
     }
 
@@ -289,13 +296,14 @@ public class StockService {
         int day = gameDate.getDay();
         LocalDate startDate = gameDate.getStartDate();
 
-        return startDate.plusDays(day + 10);
+        return startDate.plusDays(day + GameDateSetting.OFFSET_DAY.getNumberValue());
     }
 
     private List<MarketPrices> getMarketPricesUntilToday(Stock stock, LocalDate startDate, LocalDate today) {
         List<MarketPrices> marketPrices = new ArrayList<>();
 
-        for (LocalDate date = startDate; !date.isAfter(today); date = date.plusDays(1)) {
+        for (LocalDate date = startDate; !date.isAfter(today);
+            date = date.plusDays(DateOffset.NEXT_DAY.getDays())) {
             CurrentPrice currentPrice = getCurrentPriceByStockAndDate(stock, date);
             marketPrices.add(MarketPrices.create(currentPrice.getMarketPrice()));
         }
@@ -311,11 +319,11 @@ public class StockService {
         for (Transaction transaction : transactions) {
             if (transaction.getType().equals(TransactionType.BUY)) {
                 totalAmount += transaction.getTotalAmount();
-                transactionCount += 1;
+                transactionCount += ONE_TRANSACTION;
             }
         }
 
-        return totalAmount/transactionCount;
+        return totalAmount / transactionCount;
     }
 
     private Stock getStockByStockId(Long stockId) {

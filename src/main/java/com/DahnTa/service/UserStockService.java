@@ -8,6 +8,7 @@ import com.DahnTa.dto.response.InterestResponseDTO;
 import com.DahnTa.dto.response.TransactionListResponseDTO;
 import com.DahnTa.dto.response.TransactionResponseDTO;
 import com.DahnTa.entity.CurrentPrice;
+import com.DahnTa.entity.Enum.DateOffset;
 import com.DahnTa.entity.Enum.ErrorCode;
 import com.DahnTa.entity.Interest;
 import com.DahnTa.entity.Possession;
@@ -21,12 +22,14 @@ import com.DahnTa.repository.PossessionRepository;
 import com.DahnTa.repository.StockRepository;
 import com.DahnTa.repository.TransactionRepository;
 import java.util.List;
-import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class UserStockService {
+
+    private static final double SEED_MONEY = 10000.0;
+    public static final double PERCENT = 100.0;
 
     private final StockRepository stockRepository;
     private final InterestRepository interestRepository;
@@ -87,9 +90,9 @@ public class UserStockService {
             .sum();
 
         double totalAmount = userCredit + stockValuation;
-        double seedMoney = 10000.0;
+        double seedMoney = SEED_MONEY;
         double creditChangeAmount = totalAmount - seedMoney;
-        double creditChangeRate = (creditChangeAmount / seedMoney) * 100;
+        double creditChangeRate = (creditChangeAmount / seedMoney) * PERCENT;
 
         return new AssetResponseDTO(
             totalAmount,
@@ -115,8 +118,8 @@ public class UserStockService {
 
                 // 어제 대비 변동률 계산(최신순으로 정렬 돼 있음)
                 if (prices.size() > 1) {
-                    double yesterday = prices.get(1).getCurrentPrice();
-                    changeRate = ((today - yesterday) / yesterday) * 100;
+                    double yesterday = prices.get(DateOffset.PREVIOUS_DAY.getDays()).getCurrentPrice();
+                    changeRate = ((today - yesterday) / yesterday) * PERCENT;
                 }
 
                 return new InterestResponseDTO(
@@ -129,7 +132,6 @@ public class UserStockService {
             })
             .toList();
     }
-
 
     @Transactional
     public void applyDislike(Long stockId, User user) {
@@ -177,6 +179,6 @@ public class UserStockService {
 
     private double calculateChangeRate(double current, double market) {
         if (market <= 0) return 0.0;
-        return ((current - market) / market) * 100.0;
+        return ((current - market) / market) * PERCENT;
     }
 }

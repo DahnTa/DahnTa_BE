@@ -1,5 +1,6 @@
 package com.DahnTa.jwt;
 
+import com.DahnTa.entity.Enum.JwtConstants;
 import com.DahnTa.security.CustomUserDetailsService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -27,10 +28,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
         FilterChain filterChain) throws ServletException, IOException {
-        String header = request.getHeader("Authorization");
+        String header = request.getHeader(JwtConstants.AUTH_HEADER.getHeaderName());
 
-        if (header != null && header.startsWith("Bearer ")) {
-            String token = header.substring(7);
+        if (header != null && header.startsWith(JwtConstants.TOKEN_PREFIX.getPrefix())) {
+            String token = header.substring(JwtConstants.TOKEN_PREFIX_LENGTH.getLength());
             if (jwtTokenProvider.validateToken(token)) {
                 Long userId = jwtTokenProvider.extractUserId(token);
                 var userDetails = customUserDetailsService.loadUserById(userId);

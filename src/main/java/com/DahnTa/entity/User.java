@@ -18,6 +18,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Getter
 public class User {
+
+    public static final double PERCENT = 100.0;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -47,7 +50,6 @@ public class User {
         this.userAccount = userAccount;
     }
 
-
     public void updatePassword(String userPassword) {
         this.userPassword = userPassword;
     }
@@ -61,12 +63,13 @@ public class User {
     }
 
     public double calculateFinalAmount(double totalReturnRate) {
+
         return this.userCredit + totalReturnRate;
     }
 
     public double calculateReturnRate(double finalAmount, double initialFunds) {
-        return ((double) finalAmount - initialFunds) / initialFunds * 100.0;
 
+        return (finalAmount - initialFunds) / initialFunds * PERCENT;
     }
 
     public void encodePassword(PasswordEncoder passwordEncoder) {

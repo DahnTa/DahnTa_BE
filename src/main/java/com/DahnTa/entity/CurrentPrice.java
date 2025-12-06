@@ -20,6 +20,8 @@ import lombok.Getter;
 @Getter
 public class CurrentPrice {
 
+    public static final double PERCENT = 100.0;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -67,7 +69,7 @@ public class CurrentPrice {
 
     public double calculateChangeRate(CurrentPrice previous) {
 
-        return ((double) (this.currentPrice - previous.currentPrice) / previous.currentPrice) * 100.0;
+        return (this.currentPrice - previous.currentPrice) / previous.currentPrice * PERCENT;
     }
 
     public double calculateChangeAmount(CurrentPrice previous) {
