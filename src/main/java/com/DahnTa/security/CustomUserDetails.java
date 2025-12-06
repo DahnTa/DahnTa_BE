@@ -11,14 +11,20 @@ import java.util.Collections;
 @Getter
 public class CustomUserDetails implements UserDetails {
 
-    private final Long id;
-    private final String userAccount;
-    private final String password;
+    private final User user;
 
     public CustomUserDetails(User user) {
-        this.id = user.getId();
-        this.userAccount = user.getUserAccount();
-        this.password = user.getUserPassword();
+        this.user = user;
+    }
+
+    @Override
+    public String getUsername() {
+        return user.getUserAccount();
+    }
+
+    @Override
+    public String getPassword() {
+        return user.getUserPassword();
     }
 
     @Override
@@ -26,20 +32,9 @@ public class CustomUserDetails implements UserDetails {
         return Collections.emptyList();
     }
 
-    @Override
-    public String getUsername() {
-        return this.userAccount;
-    }
-
-    @Override
-    public boolean isAccountNonExpired() { return true; }
-
-    @Override
-    public boolean isAccountNonLocked() { return true; }
-
-    @Override
-    public boolean isCredentialsNonExpired() { return true; }
-
-    @Override
-    public boolean isEnabled() { return true; }
+    @Override public boolean isAccountNonExpired() { return true; }
+    @Override public boolean isAccountNonLocked() { return true; }
+    @Override public boolean isCredentialsNonExpired() { return true; }
+    @Override public boolean isEnabled() { return true; }
 }
+

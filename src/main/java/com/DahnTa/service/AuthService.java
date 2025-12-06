@@ -57,17 +57,8 @@ public class AuthService {
     }
 
     @Transactional
-    public void changePassword(String bearerToken, PasswordRequestDTO dto) {
-        String token = bearerToken.replace("Bearer ", "");
-        if (!jwtTokenProvider.validateToken(token)) {
-            throw new RuntimeException("Invalid token");
-        }
-
-        Long userId = jwtTokenProvider.extractUserId(token);
-        User user = authRepository.findById(userId)
-            .orElseThrow(() -> new RuntimeException("User not found"));
-
-        String encoded = passwordEncoder.encode(dto.getPassword());
-        user.updatePassword(encoded);
+    public void changePassword(User user, PasswordRequestDTO dto) {
+        String encodedPassword = passwordEncoder.encode(dto.getPassword());
+        user.updatePassword(encodedPassword);
     }
 }

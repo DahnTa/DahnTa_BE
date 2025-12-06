@@ -9,9 +9,9 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface InterestRepository extends JpaRepository<Interest, Long> {
-    Optional<Interest> findByUserIdAndStockId(Long userId, Long stockId);
-    boolean existsByUserIdAndStockId(Long userId, Long stockId);
+    Optional<Interest> findByUserAndStockId(User user, Long stockId);
+    boolean existsByUserAndStockId(User user, Long stockId);
 
-    List<Interest> findAllByUserId(Long userId);
+    List<Interest> findAllByUser(User user);
     void deleteByUser(User user);
 }
