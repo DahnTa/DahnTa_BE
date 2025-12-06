@@ -16,4 +16,7 @@ public interface CurrentPriceRepository extends JpaRepository<CurrentPrice, Long
     List<CurrentPrice> findTop2ByStockIdOrderByDateDesc(Long stockId);
 
     Optional<CurrentPrice> findTop1ByStockIdOrderByDateDesc(Long stockId);
+  
+    void deleteByUserId(Long userId);
+
 }

@@ -11,4 +11,5 @@ import org.springframework.stereotype.Repository;
 public interface NewsRepository extends JpaRepository<News, Long> {
 
     Optional<News> findByStockAndDate(Stock stock, LocalDate date);
+    void deleteByUserId(Long userId);
 }

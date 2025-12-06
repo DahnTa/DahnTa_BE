@@ -1,4 +1,4 @@
-package com.DahnTa.unit;
+package com.DahnTa.util;
 
 import com.DahnTa.entity.CompanyFinance;
 import com.DahnTa.entity.CurrentPrice;
@@ -7,6 +7,7 @@ import com.DahnTa.entity.News;
 import com.DahnTa.entity.Reddit;
 import com.DahnTa.entity.Stock;
 import com.DahnTa.entity.TotalAnalysis;
+import com.DahnTa.entity.User;
 import com.DahnTa.repository.CompanyFinanceRepository;
 import com.DahnTa.repository.CurrentPriceRepository;
 import com.DahnTa.repository.MacroIndicatorsRepository;
@@ -22,8 +23,10 @@ import java.util.Arrays;
 import java.util.List;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @Component
+@Transactional
 public class CsvLoadUtil {
 
     private static final List<String> STOCK_NAMES = Arrays.asList(
@@ -57,7 +60,7 @@ public class CsvLoadUtil {
             File file = resource.getFile();
 
             List<String> lines = Files.readAllLines(file.toPath());
-            lines.remove(0);
+            lines.removeFirst();
 
             List<String[]> filtered = new ArrayList<>();
 
@@ -86,7 +89,7 @@ public class CsvLoadUtil {
                 double currentPrice = Double.parseDouble(data[(int) (Math.random() * 2 + 1)]);
                 double marketPrice = Double.parseDouble(data[(int) (Math.random() * 4 + 3)]);
                 currentPriceRepository.save(
-                    CurrentPrice.create(stock, date, currentPrice, marketPrice, user.getUserId()));
+                    CurrentPrice.create(stock, date, currentPrice, marketPrice, user.getId()));
             }
         }
     }
@@ -98,8 +101,7 @@ public class CsvLoadUtil {
 
             for (String[] data : rows) {
                 LocalDate date = LocalDate.parse(data[0]);
-                newsRepository.save(
-                    News.create(stock, date, data[1], data[2], user.getUserId()));
+                newsRepository.save(News.create(stock, date, data[2], user.getId()));
             }
         }
     }
@@ -109,8 +111,7 @@ public class CsvLoadUtil {
 
         for (String[] data : rows) {
             LocalDate date = LocalDate.parse(data[0]);
-            macroIndicatorsRepository.save(
-                MacroIndicators.create(date, data[1], data[2], user.getUserId()));
+            macroIndicatorsRepository.save(MacroIndicators.create(date, data[2], user.getId()));
         }
     }
 
@@ -122,7 +123,7 @@ public class CsvLoadUtil {
             for (String[] data : rows) {
                 LocalDate date = LocalDate.parse(data[0]);
                 companyFinanceRepository.save(
-                    CompanyFinance.create(stock, date, data[1], data[2], user.getUserId()));
+                    CompanyFinance.create(stock, date, data[2], user.getId()));
             }
         }
     }
@@ -134,8 +135,10 @@ public class CsvLoadUtil {
 
             for (String[] data : rows) {
                 LocalDate date = LocalDate.parse(data[0]);
+                int score = Integer.parseInt(data[2]);
+                int numComment = Integer.parseInt(data[3]);
                 redditRepository.save(
-                    Reddit.create(stock, date, data[1], data[2], data[3], data[4], user.getUserId()));
+                    Reddit.create(stock, date, data[1], score, numComment, user.getId()));
             }
         }
     }
@@ -148,7 +151,7 @@ public class CsvLoadUtil {
             for (String[] data : rows) {
                 LocalDate date = LocalDate.parse(data[0]);
                 totalAnalysisRepository.save(
-                    TotalAnalysis.create(stock, date, data[1], data[2], user.getUserId()));
+                    TotalAnalysis.create(stock, date, data[1], data[2], user.getId()));
             }
         }
     }

@@ -26,9 +26,6 @@ public class MacroIndicators {
     @Column(name = "date", nullable = false)
     private LocalDate date;
 
-    @Column(name = "disclaimer", nullable = false)
-    private String disclaimer;
-
     @Column(name = "content", nullable = false)
     private String content;
 
@@ -38,20 +35,17 @@ public class MacroIndicators {
     protected MacroIndicators() {
     }
 
-    private MacroIndicators(LocalDate date, String disclaimer, String content, Long userId) {
+    private MacroIndicators(LocalDate date, String content, Long userId) {
         this.date = date;
-        this.disclaimer = disclaimer;
         this.content = content;
         this.userId = userId;
     }
 
     @Builder
-    public static MacroIndicators create(LocalDate date, String disclaimer, String content,
-        Long userId) {
+    public static MacroIndicators create(LocalDate date, String content, Long userId) {
 
         return MacroIndicators.builder()
             .date(date)
-            .disclaimer(disclaimer)
             .content(content)
             .userId(userId)
             .build();
