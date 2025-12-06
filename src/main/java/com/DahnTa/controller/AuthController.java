@@ -1,9 +1,9 @@
 package com.DahnTa.controller;
 
-import com.DahnTa.dto.Auth.LoginRequestDTO;
-import com.DahnTa.dto.Auth.LoginResponseDTO;
-import com.DahnTa.dto.Auth.PasswordRequestDTO;
-import com.DahnTa.dto.Auth.SignUpRequestDTO;
+import com.DahnTa.dto.request.LoginRequestDTO;
+import com.DahnTa.dto.response.LoginResponseDTO;
+import com.DahnTa.dto.request.PasswordRequestDTO;
+import com.DahnTa.dto.request.SignUpRequestDTO;
 import com.DahnTa.service.AuthService;
 import com.DahnTa.service.JWTService;
 import lombok.RequiredArgsConstructor;
@@ -34,25 +34,15 @@ public class AuthController {
         return ResponseEntity.ok().body(responseDTO);
     }
 
+
+    // @todo : token 검증 로직 service layer로 내리기
     @PostMapping("/password")
     public ResponseEntity<?> updatePassword(@RequestHeader("Authorization") String token,
        @RequestBody PasswordRequestDTO updatePassword) throws Exception {
-        String actualToken = token;
-        if (token.startsWith("Bearer ")) {
-            actualToken = token.substring(7);
-        }
 
-        // 토큰 검증
-        if (jwtService.validateToken(actualToken)) {
-            // @todo : token pasring으로 Id 추출
-             Long userId = jwtService.extractUserId(actualToken);
-
-            authService.changePassword(userId, updatePassword.getPassword());
-            return new ResponseEntity<>(HttpStatus.OK);
-        } else {
-          throw new Exception("토큰이 유효하지 않음");
-        }
-
+        // 결과에 따른 반환
+        authService.changePassword(token, updatePassword);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
 }
