@@ -6,27 +6,38 @@ import com.DahnTa.dto.request.PasswordRequestDTO;
 import com.DahnTa.dto.response.LoginResponseDTO;
 import com.DahnTa.dto.request.SignUpRequestDTO;
 import com.DahnTa.entity.User;
+import com.DahnTa.jwt.JwtTokenProvider;
 import com.DahnTa.repository.AuthRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class AuthService {
-    private AuthRepository authRepository;
-    private JWTService jwtService;
-    private UserMapper userMapper;
 
-    public AuthService(AuthRepository authRepository, JWTService jwtService,
-        UserMapper userMapper) {
+    private final AuthRepository authRepository;
+    private final UserMapper userMapper;
+    private final JwtTokenProvider jwtTokenProvider;
+    private final RefreshTokenService refreshTokenService;
+    private final PasswordEncoder passwordEncoder;
+
+    public AuthService(AuthRepository authRepository, UserMapper userMapper,
+        JwtTokenProvider jwtTokenProvider, RefreshTokenService refreshTokenService,
+        PasswordEncoder passwordEncoder) {
         this.authRepository = authRepository;
-        this.jwtService = jwtService;
         this.userMapper = userMapper;
+        this.jwtTokenProvider = jwtTokenProvider;
+        this.refreshTokenService = refreshTokenService;
+        this.passwordEncoder = passwordEncoder;
     }
 
-
     public void signupUser(SignUpRequestDTO signUpRequestDTO) {
-         User userEntity = userMapper.toEntity(signUpRequestDTO);
-         authRepository.save(userEntity);
+        if (authRepository.existsByUserAccount(signUpRequestDTO.getUserAccount())) {
+            throw new RuntimeException("이미 존재하는 계정입니다.");
+        }
+        User userEntity = userMapper.toEntity(signUpRequestDTO);
+        userEntity.encodePassword(passwordEncoder);
+        authRepository.save(userEntity);
     }
 
 
@@ -34,12 +45,13 @@ public class AuthService {
         User user = authRepository.findByUserAccount(loginRequestDTO.getUserAccount())
             .orElseThrow(() -> new RuntimeException("User not found"));
 
-        user.validatePassword(loginRequestDTO.getUserPassword());
+        if (!passwordEncoder.matches(loginRequestDTO.getUserPassword(), user.getUserPassword())) {
+            throw new RuntimeException("Invalid password");
+        }
 
-        String accessToken = jwtService.generateAccessToken(user.getUserAccount(), user.getId());
-        String refreshToken = jwtService.generateRefreshToken(user.getId());
-
-        jwtService.saveToken(user, refreshToken);
+        String accessToken = jwtTokenProvider.generateAccessToken(user.getId(), user.getUserAccount());
+        String refreshToken = jwtTokenProvider.generateRefreshToken(user.getId());
+        refreshTokenService.saveRefreshToken(user, refreshToken);
 
         return new LoginResponseDTO(accessToken, refreshToken);
     }
@@ -47,17 +59,15 @@ public class AuthService {
     @Transactional
     public void changePassword(String bearerToken, PasswordRequestDTO dto) {
         String token = bearerToken.replace("Bearer ", "");
-
-        if (!jwtService.validateToken(token)) {
+        if (!jwtTokenProvider.validateToken(token)) {
             throw new RuntimeException("Invalid token");
         }
 
-        Long userId = jwtService.extractUserId(token);
-
+        Long userId = jwtTokenProvider.extractUserId(token);
         User user = authRepository.findById(userId)
             .orElseThrow(() -> new RuntimeException("User not found"));
 
-        user.updatePassword(dto.getPassword());
+        String encoded = passwordEncoder.encode(dto.getPassword());
+        user.updatePassword(encoded);
     }
-
 }

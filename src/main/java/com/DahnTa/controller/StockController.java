@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -32,29 +33,29 @@ public class StockController {
     }
 
     @PostMapping("/start")
-    public ResponseEntity<Void> gameStart() {
+    public ResponseEntity<Void> gameStart(@RequestHeader("Authorization") String token) {
         stockService.gameStart();
 
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @PostMapping("/next")
-    public ResponseEntity<Void> gameDateNext() {
+    public ResponseEntity<Void> gameDateNext(@RequestHeader("Authorization") String token) {
         stockService.gameDateNext();
 
         return ResponseEntity.status(HttpStatus.OK).build();
     }
 
     @PostMapping("/finish")
-    public ResponseEntity<Void> gameFinish() {
+    public ResponseEntity<Void> gameFinish(@RequestHeader("Authorization") String token) {
         stockService.gameFinish();
 
         return ResponseEntity.status(HttpStatus.OK).build();
     }
 
     @PostMapping("/{id}/orders/buy")
-    public ResponseEntity<Void> stockBuy(@PathVariable(name = "id") Long stockId, @RequestBody
-    StockBuyRequest request) {
+    public ResponseEntity<Void> stockBuy(@RequestHeader("Authorization") String token,
+        @PathVariable(name = "id") Long stockId, @RequestBody StockBuyRequest request) {
         stockService.stockBuy(stockId, request);
 
         return ResponseEntity.status(HttpStatus.CREATED).build();

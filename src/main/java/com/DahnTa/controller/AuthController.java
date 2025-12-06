@@ -5,7 +5,6 @@ import com.DahnTa.dto.response.LoginResponseDTO;
 import com.DahnTa.dto.request.PasswordRequestDTO;
 import com.DahnTa.dto.request.SignUpRequestDTO;
 import com.DahnTa.service.AuthService;
-import com.DahnTa.service.JWTService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
