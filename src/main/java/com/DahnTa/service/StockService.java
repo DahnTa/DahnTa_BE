@@ -3,6 +3,7 @@ package com.DahnTa.service;
 import com.DahnTa.dto.DashBoard;
 import com.DahnTa.dto.MarketPrices;
 import com.DahnTa.dto.request.StockBuyRequest;
+import com.DahnTa.dto.request.StockSellRequest;
 import com.DahnTa.dto.response.MacroIndicatorsResponse;
 import com.DahnTa.dto.response.StockCompanyFinanceResponse;
 import com.DahnTa.dto.response.StockGameResultResponse;
@@ -126,7 +127,7 @@ public class StockService {
         user.deductCredit(currentPrice.getCurrentPrice() * request.getQuantity());
     }
 
-    public void stockSell(User user, Long stockId, StockBuyRequest request) {
+    public void stockSell(User user, Long stockId, StockSellRequest request) {
         Stock stock = getStockByStockId(stockId);
         LocalDate today = getToday(user);
 

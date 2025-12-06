@@ -11,9 +11,11 @@ import com.DahnTa.dto.response.StockOrderResponse;
 import com.DahnTa.dto.response.StockRedditResponse;
 import com.DahnTa.dto.response.StockResponse;
 import com.DahnTa.dto.response.StockTotalAnalysisResponse;
+import com.DahnTa.security.CustomUserDetails;
 import com.DahnTa.service.StockService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -33,103 +35,111 @@ public class StockController {
     }
 
     @PostMapping("/start")
-    public ResponseEntity<Void> gameStart(@RequestHeader("Authorization") String token) {
-        stockService.gameStart();
+    public ResponseEntity<Void> gameStart(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        stockService.gameStart(userDetails.getUser());
 
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @PostMapping("/next")
-    public ResponseEntity<Void> gameDateNext(@RequestHeader("Authorization") String token) {
-        stockService.gameDateNext();
+    public ResponseEntity<Void> gameDateNext(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        stockService.gameDateNext(userDetails.getUser());
 
         return ResponseEntity.status(HttpStatus.OK).build();
     }
 
     @PostMapping("/finish")
-    public ResponseEntity<Void> gameFinish(@RequestHeader("Authorization") String token) {
-        stockService.gameFinish();
+    public ResponseEntity<Void> gameFinish(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        stockService.gameFinish(userDetails.getUser());
 
         return ResponseEntity.status(HttpStatus.OK).build();
     }
 
     @PostMapping("/{id}/orders/buy")
-    public ResponseEntity<Void> stockBuy(@RequestHeader("Authorization") String token,
+    public ResponseEntity<Void> stockBuy(@AuthenticationPrincipal CustomUserDetails userDetails,
         @PathVariable(name = "id") Long stockId, @RequestBody StockBuyRequest request) {
-        stockService.stockBuy(stockId, request);
+        stockService.stockBuy(userDetails.getUser(), stockId, request);
 
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @PostMapping("/{id}/orders/sell")
-    public ResponseEntity<Void> stockSell(@PathVariable(name = "id") Long stockId, @RequestBody
-    StockSellRequest request) {
-        stockService.stockSell(stockId, request);
+    public ResponseEntity<Void> stockSell(@AuthenticationPrincipal CustomUserDetails userDetails,
+        @PathVariable(name = "id") Long stockId, @RequestBody StockSellRequest request) {
+        stockService.stockSell(userDetails.getUser(), stockId, request);
 
         return ResponseEntity.status(HttpStatus.OK).build();
     }
 
     @GetMapping
-    public ResponseEntity<StockListResponse> getStockList() {
-        StockListResponse response = stockService.getStockList();
+    public ResponseEntity<StockListResponse> getStockList(
+        @AuthenticationPrincipal CustomUserDetails userDetails) {
+        StockListResponse response = stockService.getStockList(userDetails.getUser());
 
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<StockResponse> getStock(@PathVariable(name = "id") Long stockId) {
-        StockResponse response = stockService.getStock(stockId);
+    public ResponseEntity<StockResponse> getStock(@AuthenticationPrincipal CustomUserDetails userDetails,
+        @PathVariable(name = "id") Long stockId) {
+        StockResponse response = stockService.getStock(userDetails.getUser(), stockId);
 
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
     @GetMapping("/{id}/order")
-    public ResponseEntity<StockOrderResponse> getStockOrder(@PathVariable(name = "id") Long stockId) {
-        StockOrderResponse response = stockService.getStockOrder(stockId);
+    public ResponseEntity<StockOrderResponse> getStockOrder(
+        @AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable(name = "id") Long stockId) {
+        StockOrderResponse response = stockService.getStockOrder(userDetails.getUser(), stockId);
 
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
     @GetMapping("/{id}/news")
-    public ResponseEntity<StockNewsResponse> getStockNews(@PathVariable(name = "id") Long stockId) {
-        StockNewsResponse response = stockService.getStockNews(stockId);
+    public ResponseEntity<StockNewsResponse> getStockNews(
+        @AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable(name = "id") Long stockId) {
+        StockNewsResponse response = stockService.getStockNews(userDetails.getUser(), stockId);
 
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
     @GetMapping("/{id}/company")
     public ResponseEntity<StockCompanyFinanceResponse> getStockCompanyFinance(
-        @PathVariable(name = "id") Long stockId) {
-        StockCompanyFinanceResponse response = stockService.getStockCompanyFinance(stockId);
+        @AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable(name = "id") Long stockId) {
+        StockCompanyFinanceResponse response = stockService.getStockCompanyFinance(userDetails.getUser(),
+            stockId);
 
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
     @GetMapping("/macro")
-    public ResponseEntity<MacroIndicatorsResponse> getMacroIndicators() {
-        MacroIndicatorsResponse response = stockService.getMacroIndicators();
+    public ResponseEntity<MacroIndicatorsResponse> getMacroIndicators(
+        @AuthenticationPrincipal CustomUserDetails userDetails) {
+        MacroIndicatorsResponse response = stockService.getMacroIndicators(userDetails.getUser());
 
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
     @GetMapping("/{id}/reddit")
-    public ResponseEntity<StockRedditResponse> getReddit(@PathVariable(name = "id") Long stockId) {
-        StockRedditResponse response = stockService.getReddit(stockId);
+    public ResponseEntity<StockRedditResponse> getReddit(
+        @AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable(name = "id") Long stockId) {
+        StockRedditResponse response = stockService.getReddit(userDetails.getUser(), stockId);
 
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
     @GetMapping("/{id}/total")
     public ResponseEntity<StockTotalAnalysisResponse> getTotalAnalysis(
-        @PathVariable(name = "id") Long stockId) {
-        StockTotalAnalysisResponse response = stockService.getTotalAnalysis(stockId);
+        @AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable(name = "id") Long stockId) {
+        StockTotalAnalysisResponse response = stockService.getTotalAnalysis(userDetails.getUser(), stockId);
 
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
     @GetMapping("/result")
-    public ResponseEntity<StockGameResultResponse> gatGameResult() {
-        StockGameResultResponse response = stockService.gatGameResult();
+    public ResponseEntity<StockGameResultResponse> gatGameResult(
+        @AuthenticationPrincipal CustomUserDetails userDetails) {
+        StockGameResultResponse response = stockService.gatGameResult(userDetails.getUser());
 
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
