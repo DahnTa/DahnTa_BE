@@ -1,6 +1,8 @@
 package com.DahnTa.security;
 
+import com.DahnTa.entity.Enum.ErrorCode;
 import com.DahnTa.entity.User;
+import com.DahnTa.exception.UserStockException;
 import com.DahnTa.repository.UserRepository;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -18,13 +20,13 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String userAccount) {
         User user = userRepository.findByUserAccount(userAccount)
-            .orElseThrow(() -> new RuntimeException("유저가 존재하지 않습니다."));
+            .orElseThrow(() -> new UserStockException(ErrorCode.USER_NOT_FOUND));
         return new CustomUserDetails(user);
     }
 
     public UserDetails loadUserById(Long id) {
         User user = userRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("유저가 존재하지 않습니다."));
+            .orElseThrow(() -> new UserStockException(ErrorCode.USER_NOT_FOUND));
         return new CustomUserDetails(user);
     }
 }

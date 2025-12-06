@@ -1,5 +1,7 @@
 package com.DahnTa.entity;
 
+import com.DahnTa.entity.Enum.ErrorCode;
+import com.DahnTa.exception.StockException;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -79,8 +81,8 @@ public class CurrentPrice {
     }
 
     public void validateBuyQuantity(double userCredit, double buyQuantity) {
-        if (userCredit > this.currentPrice * buyQuantity) {
-            throw new IllegalArgumentException("사용자의 보유 금액이 부족합니다.");
+        if (userCredit < this.currentPrice * buyQuantity) {
+            throw new StockException(ErrorCode.INSUFFICIENT_CREDIT);
         }
     }
 }

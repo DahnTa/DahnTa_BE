@@ -15,6 +15,8 @@ import com.DahnTa.dto.response.StockResponse;
 import com.DahnTa.dto.response.StockTotalAnalysisResponse;
 import com.DahnTa.entity.CompanyFinance;
 import com.DahnTa.entity.CurrentPrice;
+import com.DahnTa.entity.Enum.ErrorCode;
+import com.DahnTa.entity.Enum.TransactionType;
 import com.DahnTa.entity.GameDate;
 import com.DahnTa.entity.MacroIndicators;
 import com.DahnTa.entity.News;
@@ -23,8 +25,8 @@ import com.DahnTa.entity.Reddit;
 import com.DahnTa.entity.Stock;
 import com.DahnTa.entity.TotalAnalysis;
 import com.DahnTa.entity.Transaction;
-import com.DahnTa.entity.TransactionType;
 import com.DahnTa.entity.User;
+import com.DahnTa.exception.StockException;
 import com.DahnTa.repository.CompanyFinanceRepository;
 import com.DahnTa.repository.CurrentPriceRepository;
 import com.DahnTa.repository.GameDateRepository;
@@ -132,7 +134,7 @@ public class StockService {
         LocalDate today = getToday(user);
 
         if (!possessionRepository.existsByStockAndUser(stock, user)) {
-            throw new IllegalArgumentException("해당 주식을 보유하고 있지 않습니다.");
+            throw new StockException(ErrorCode.POSSESSION_NOT_FOUND);
         }
         Possession possession = getPossessionByStockAndUser(stock, user);
         possession.validateSellQuantity(request.getQuantity());
@@ -304,9 +306,10 @@ public class StockService {
     private double getAveragePrice(Stock stock, User user) {
         int transactionCount = 0;
         double totalAmount = 0;
+
         List<Transaction> transactions = transactionRepository.findByStockAndUser(stock, user);
         for (Transaction transaction : transactions) {
-            if (transaction.getType().equals(TransactionType.매수)) {
+            if (transaction.getType().equals(TransactionType.BUY)) {
                 totalAmount += transaction.getTotalAmount();
                 transactionCount += 1;
             }
@@ -318,13 +321,13 @@ public class StockService {
     private Stock getStockByStockId(Long stockId) {
 
         return stockRepository.findById(stockId)
-            .orElseThrow(() -> new IllegalArgumentException("해당 id의 stock을 찾을 수 없습니다."));
+            .orElseThrow(() -> new StockException(ErrorCode.STOCK_NOT_FOUND));
     }
 
     private GameDate getGameDateByUser(User user) {
 
         return gameDateRepository.findByUser(user)
-            .orElseThrow(() -> new IllegalArgumentException("해당 user의 GameDate를 찾을 수 없습니다."));
+            .orElseThrow(() -> new StockException(ErrorCode.GAME_DATE_NOT_FOUND));
     }
 
     private Possession getPossessionByStockAndUser(Stock stock, User user) {
@@ -336,32 +339,32 @@ public class StockService {
     private CurrentPrice getCurrentPriceByStockAndDate(Stock stock, LocalDate date) {
 
         return currentPriceRepository.findByStockAndDate(stock, date)
-            .orElseThrow(() -> new IllegalArgumentException("해당 날짜의 주식 가격을 찾을 수 없습니다."));
+            .orElseThrow(() -> new StockException(ErrorCode.PRICE_NOT_FOUND));
     }
 
     private News getNewsByStockAndDate(Stock stock, LocalDate date) {
         return newsRepository.findByStockAndDate(stock, date)
-            .orElseThrow(() -> new IllegalArgumentException("해당 날짜의 주식 뉴스를 찾을 수 없습니다."));
+            .orElseThrow(() -> new StockException(ErrorCode.NEWS_NOT_FOUND));
     }
 
     private CompanyFinance getCompanyFinanceByStockAndDate(Stock stock, LocalDate date) {
         return companyFinanceRepository.findByStockAndDate(stock, date)
-            .orElseThrow(() -> new IllegalArgumentException("해당 날짜의 주식 재무제표를 찾을 수 없습니다."));
+            .orElseThrow(() -> new StockException(ErrorCode.COMPANY_FINANCE_NOT_FOUND));
     }
 
     private MacroIndicators getMacroIndicatorsByStockAndDate(LocalDate date) {
         return macroIndicatorsRepository.findByDate(date)
-            .orElseThrow(() -> new IllegalArgumentException("해당 날짜의 거시경제를 찾을 수 없습니다."));
+            .orElseThrow(() -> new StockException(ErrorCode.MACRO_INDICATORS_NOT_FOUND));
     }
 
     private Reddit getRedditByStockAndDate(Stock stock, LocalDate date) {
         return redditRepository.findByStockAndDate(stock, date)
-            .orElseThrow(() -> new IllegalArgumentException("해당 날짜의 주식 Reddit을 찾을 수 없습니다."));
+            .orElseThrow(() -> new StockException(ErrorCode.REDDIT_NOT_FOUND));
     }
 
     private TotalAnalysis getTotalAnalysisByStockAndDate(Stock stock, LocalDate date) {
         return totalAnalysisRepository.findByStockAndDate(stock, date)
-            .orElseThrow(() -> new IllegalArgumentException("해당 날짜의 주식 종합분석을 찾을 수 없습니다."));
+            .orElseThrow(() -> new StockException(ErrorCode.TOTAL_ANALYSIS_NOT_FOUND));
     }
 
     private List<Possession> getPossessionByUser(User user) {

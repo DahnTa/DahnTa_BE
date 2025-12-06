@@ -13,7 +13,7 @@ public class UserMapper {
             .userAccount(signUpRequestDTO.getUserAccount())
             .userPassword(signUpRequestDTO.getUserPassword())
             .userNickName(signUpRequestDTO.getUserNickName())
-            .userCredit(10000000)
+            .userCredit(10000)
             .userProfileImageUrl(signUpRequestDTO.getUserProfileImageUrl())
             .build();
 

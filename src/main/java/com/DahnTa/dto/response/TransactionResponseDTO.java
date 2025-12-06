@@ -1,6 +1,6 @@
 package com.DahnTa.dto.response;
 
-import com.DahnTa.entity.TransactionType;
+import com.DahnTa.entity.Enum.TransactionType;
 import java.time.LocalDate;
 import lombok.Builder;
 

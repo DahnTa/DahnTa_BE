@@ -2,12 +2,14 @@ package com.DahnTa.util;
 
 import com.DahnTa.entity.CompanyFinance;
 import com.DahnTa.entity.CurrentPrice;
+import com.DahnTa.entity.Enum.ErrorCode;
 import com.DahnTa.entity.MacroIndicators;
 import com.DahnTa.entity.News;
 import com.DahnTa.entity.Reddit;
 import com.DahnTa.entity.Stock;
 import com.DahnTa.entity.TotalAnalysis;
 import com.DahnTa.entity.User;
+import com.DahnTa.exception.StockException;
 import com.DahnTa.repository.CompanyFinanceRepository;
 import com.DahnTa.repository.CurrentPriceRepository;
 import com.DahnTa.repository.MacroIndicatorsRepository;
@@ -159,6 +161,6 @@ public class CsvLoadUtil {
     private Stock getStockByName(String stockName) {
 
         return stockRepository.findByStockName(stockName)
-            .orElseThrow(() -> new IllegalArgumentException("해당 주식을 찾지 못했습니다."));
+            .orElseThrow(() -> new StockException(ErrorCode.STOCK_NOT_FOUND));
     }
 }

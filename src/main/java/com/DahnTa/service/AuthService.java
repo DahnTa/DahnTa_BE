@@ -5,7 +5,9 @@ import com.DahnTa.dto.request.LoginRequestDTO;
 import com.DahnTa.dto.request.PasswordRequestDTO;
 import com.DahnTa.dto.response.LoginResponseDTO;
 import com.DahnTa.dto.request.SignUpRequestDTO;
+import com.DahnTa.entity.Enum.ErrorCode;
 import com.DahnTa.entity.User;
+import com.DahnTa.exception.AuthException;
 import com.DahnTa.jwt.JwtTokenProvider;
 import com.DahnTa.repository.AuthRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -33,7 +35,7 @@ public class AuthService {
 
     public void signupUser(SignUpRequestDTO signUpRequestDTO) {
         if (authRepository.existsByUserAccount(signUpRequestDTO.getUserAccount())) {
-            throw new RuntimeException("이미 존재하는 계정입니다.");
+            throw new AuthException(ErrorCode.ACCOUNT_ALREADY_EXISTS);
         }
         User userEntity = userMapper.toEntity(signUpRequestDTO);
         userEntity.encodePassword(passwordEncoder);
@@ -43,10 +45,10 @@ public class AuthService {
 
     public LoginResponseDTO authenticateToken(LoginRequestDTO loginRequestDTO) {
         User user = authRepository.findByUserAccount(loginRequestDTO.getUserAccount())
-            .orElseThrow(() -> new RuntimeException("User not found"));
+            .orElseThrow(() -> new AuthException(ErrorCode.USER_NOT_FOUND));
 
         if (!passwordEncoder.matches(loginRequestDTO.getUserPassword(), user.getUserPassword())) {
-            throw new RuntimeException("Invalid password");
+            throw new AuthException(ErrorCode.INVALID_PASSWORD);
         }
 
         String accessToken = jwtTokenProvider.generateAccessToken(user.getId(), user.getUserAccount());
