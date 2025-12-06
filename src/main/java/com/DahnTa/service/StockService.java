@@ -267,7 +267,8 @@ public class StockService {
         removeGameDataUtil.gameDataRemoveByTotalAnalysis(user);
         removeGameDataUtil.gameDataRemoveByPossession(user);
         removeGameDataUtil.gameDataRemoveByGameDate(user);
-        // 관심종목, 거래내역도 삭제
+        removeGameDataUtil.gameDateRemoveByInterest(user);
+        removeGameDataUtil.gameDateRemoveByTransaction(user);
     }
 
     private double getChangeRate(Stock stock, CurrentPrice currentPrice, LocalDate date) {

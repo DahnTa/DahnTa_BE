@@ -1,6 +1,7 @@
 package com.DahnTa.repository;
 
 import com.DahnTa.entity.Interest;
+import com.DahnTa.entity.User;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -12,4 +13,5 @@ public interface InterestRepository extends JpaRepository<Interest, Long> {
     boolean existsByUserIdAndStockId(Long userId, Long stockId);
 
     List<Interest> findAllByUserId(Long userId);
+    void deleteByUser(User user);
 }

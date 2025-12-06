@@ -15,5 +15,6 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     @Query("SELECT t FROM Transaction t JOIN FETCH t.stock WHERE t.user.id = :userId")
     List<Transaction> findAllByUserId(@Param("userId") Long userId);
     List<Transaction> findByStockAndUser(Stock stock, User user);
+    void deleteByUser(User user);
 }
 
