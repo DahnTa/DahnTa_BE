@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserStockController {
     private final UserStockService userStockService;
 
-    @PostMapping("/{id}/dislike")
+    @PostMapping("/interest/{id}/dislike")
     public ResponseEntity<?> dislikePost(@RequestHeader("Authorization") String token,
         @PathVariable("id") Long stockId) throws Exception {
 
@@ -33,7 +33,7 @@ public class UserStockController {
     }
 
 
-    @PostMapping("/{id}/like")
+    @PostMapping("/interest/{id}/like")
     public ResponseEntity<?> likePost(@RequestHeader("Authorization") String token,
         @PathVariable("id") Long stockId) {
 
