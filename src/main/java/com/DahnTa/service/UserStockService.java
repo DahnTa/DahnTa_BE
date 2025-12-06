@@ -102,7 +102,7 @@ public class UserStockService {
             .sum();
 
         double totalAmount = userCredit + stockValuation;
-        double seedMoney = 10000000.0;
+        double seedMoney = 10000.0;
         double creditChangeAmount = totalAmount - seedMoney;
         double creditChangeRate = (creditChangeAmount / seedMoney) * 100;
 
@@ -227,6 +227,4 @@ public class UserStockService {
         if (market <= 0) return 0.0;
         return ((current - market) / market) * 100.0;
     }
-
-
 }

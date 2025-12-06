@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "USER_TB")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Builder
+
 @Getter
 public class User {
     @Id
@@ -55,6 +55,7 @@ public class User {
         if (!this.userPassword.equals(inputPassword)) {
             throw new RuntimeException("Password incorrect");
         }
+    }
 
     public void increaseCredit(double amount) {
         this.userCredit += amount;

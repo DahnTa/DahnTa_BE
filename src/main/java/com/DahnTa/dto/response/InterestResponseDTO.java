@@ -1,7 +1,5 @@
 package com.DahnTa.dto.response;
 
-import com.DahnTa.entity.Interest;
-
 public class InterestResponseDTO {
     private Long stockId;
     private String stockName;

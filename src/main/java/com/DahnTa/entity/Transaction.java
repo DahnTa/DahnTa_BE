@@ -1,6 +1,6 @@
 package com.DahnTa.entity;
 
-import com.DahnTa.dto.response.TransactionResponseDTO;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -43,6 +43,7 @@ public class Transaction {
     @Column(name = "total_amount", nullable = false)
     private double totalAmount;
 
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     @Column(name = "date", nullable = false)
     private LocalDate date;
 
