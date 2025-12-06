@@ -1,29 +1,6 @@
 package com.DahnTa.dto.response;
 
-// @todo : recoder로 변경
-public class LoginResponseDTO {
-    private String accessToken;
-    private String refreshToken;
-
-    public LoginResponseDTO(String accessToken, String refreshToken) {
-        this.accessToken = accessToken;
-        this.refreshToken = refreshToken;
-    }
-
-    public String getAccessToken() {
-        return accessToken;
-    }
-
-    public String getRefreshToken() {
-        return refreshToken;
-    }
-
-    public void setAccessToken(String accessToken) {
-        this.accessToken = accessToken;
-    }
-
-    public void setRefreshToken(String refreshToken) {
-        this.refreshToken = refreshToken;
-    }
-
-}
+public record LoginResponseDTO(
+    String accessToken,
+    String refreshToken
+) {}
