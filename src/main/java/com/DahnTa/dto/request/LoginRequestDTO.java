@@ -1,4 +1,4 @@
-package com.DahnTa.dto.Auth;
+package com.DahnTa.dto.request;
 
 public class LoginRequestDTO {
     private Long id;

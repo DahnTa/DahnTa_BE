@@ -12,7 +12,15 @@ import org.springframework.stereotype.Repository;
 public interface PossessionRepository extends JpaRepository<Possession, Long> {
 
     Optional<Possession> findByStockAndUser(Stock stock, User user);
+
+    boolean existsByStockAndUser(Stock stock, User user);
+
+    List<Possession> findAllByUserId(Long userId);
+
     boolean existsByStockAnUser(Stock stock, User user);
+  
     void deleteByUser(User user);
+     
     List<Possession> findByUser(User user);
+
 }

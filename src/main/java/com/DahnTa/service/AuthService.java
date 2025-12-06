@@ -1,8 +1,10 @@
 package com.DahnTa.service;
 
-import com.DahnTa.dto.Auth.LoginRequestDTO;
-import com.DahnTa.dto.Auth.LoginResponseDTO;
-import com.DahnTa.dto.Auth.SignUpRequestDTO;
+import com.DahnTa.Mapper.UserMapper;
+import com.DahnTa.dto.request.LoginRequestDTO;
+import com.DahnTa.dto.request.PasswordRequestDTO;
+import com.DahnTa.dto.response.LoginResponseDTO;
+import com.DahnTa.dto.request.SignUpRequestDTO;
 import com.DahnTa.entity.User;
 import com.DahnTa.repository.AuthRepository;
 import org.springframework.stereotype.Service;
@@ -12,15 +14,18 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthService {
     private AuthRepository authRepository;
     private JWTService jwtService;
+    private UserMapper userMapper;
 
-    public AuthService(AuthRepository authRepository, JWTService jwtService) {
+    public AuthService(AuthRepository authRepository, JWTService jwtService,
+        UserMapper userMapper) {
         this.authRepository = authRepository;
         this.jwtService = jwtService;
+        this.userMapper = userMapper;
     }
 
 
     public void signupUser(SignUpRequestDTO signUpRequestDTO) {
-         User userEntity = toEntity(signUpRequestDTO);
+         User userEntity = userMapper.toEntity(signUpRequestDTO);
          authRepository.save(userEntity);
     }
 
@@ -29,10 +34,7 @@ public class AuthService {
         User user = authRepository.findByUserAccount(loginRequestDTO.getUserAccount())
             .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // password 검증 로직
-        if (!user.getUserPassword().equals(loginRequestDTO.getUserPassword())) {
-            throw new RuntimeException("Password incorrect");
-        }
+        user.validatePassword(loginRequestDTO.getUserPassword());
 
         String accessToken = jwtService.generateAccessToken(user.getUserAccount(), user.getId());
         String refreshToken = jwtService.generateRefreshToken(user.getId());
@@ -43,21 +45,19 @@ public class AuthService {
     }
 
     @Transactional
-    public void changePassword(Long userId, String password) {
+    public void changePassword(String bearerToken, PasswordRequestDTO dto) {
+        String token = bearerToken.replace("Bearer ", "");
+
+        if (!jwtService.validateToken(token)) {
+            throw new RuntimeException("Invalid token");
+        }
+
+        Long userId = jwtService.extractUserId(token);
+
         User user = authRepository.findById(userId)
-            .orElseThrow(() -> new RuntimeException("해당 id의 user가 존재하지 않음."));
+            .orElseThrow(() -> new RuntimeException("User not found"));
 
-        user.updatePassword(password);
-    }
-
-
-    // dto to entity
-    // @todo : builder pattern으로 개선 필요
-    // @todo : password 암호화하여 저장 필요
-    private User toEntity(SignUpRequestDTO signUpRequestDTO) {
-         User userEntity = new User(signUpRequestDTO.getUserAccount(), signUpRequestDTO.getUserPassword(),
-             signUpRequestDTO.getUserNickName(), 10000000, signUpRequestDTO.getUserProfileImageUrl());
-        return userEntity;
+        user.updatePassword(dto.getPassword());
     }
 
 }
