@@ -7,11 +7,13 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "USER_TB")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Getter
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -43,33 +45,13 @@ public class User {
     }
 
 
-    public Long getId() {
-        return id;
-    }
-
-    public String getUserAccount() {
-        return userAccount;
-    }
-
-    public String getUserPassword() {
-        return userPassword;
-    }
-
-    public int getUserCredit() {
-        return userCredit;
-    }
-
-    public String getUserNickName() {
-        return userNickName;
-    }
-
-    public String getUserProfileImageUrl() {
-        return userProfileImageUrl;
-    }
-
-
     public void updatePassword(String userPassword) {
         this.userPassword = userPassword;
     }
 
+    public void validatePassword(String inputPassword) {
+        if (!this.userPassword.equals(inputPassword)) {
+            throw new RuntimeException("Password incorrect");
+        }
+    }
 }
