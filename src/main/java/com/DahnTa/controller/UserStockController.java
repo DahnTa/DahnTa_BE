@@ -1,5 +1,6 @@
 package com.DahnTa.controller;
 
+import com.DahnTa.dto.response.AssetResponseDTO;
 import com.DahnTa.dto.response.InterestListResponseDTO;
 import com.DahnTa.dto.response.InterestResponseDTO;
 import com.DahnTa.dto.response.TransactionListResponseDTO;
@@ -55,6 +56,13 @@ public class UserStockController {
         List<InterestResponseDTO> list = userStockService.getInterestList(token);
 
         return ResponseEntity.ok().body(new InterestListResponseDTO(list));
+    }
+
+
+    @GetMapping("/asset")
+    public ResponseEntity<AssetResponseDTO> getAsset(@RequestHeader("Authorization") String token) {
+         AssetResponseDTO assets = userStockService.getAssets(token);
+        return ResponseEntity.ok(assets);
     }
 
 }
