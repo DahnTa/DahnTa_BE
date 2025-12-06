@@ -5,6 +5,8 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
 import com.DahnTa.dto.response.AssetResponseDTO;
+import com.DahnTa.dto.response.HoldingsListResponseDTO;
+import com.DahnTa.dto.response.HoldingsResponseDTO;
 import com.DahnTa.dto.response.InterestResponseDTO;
 import com.DahnTa.dto.response.TransactionListResponseDTO;
 import com.DahnTa.dto.response.TransactionResponseDTO;
@@ -48,6 +50,46 @@ public class UserStockService {
         this.possessionRepository = possessionRepository;
     }
 
+
+    public HoldingsListResponseDTO getHoldings(String bearerToken) {
+        Long userId = extractUserIdFromToken(bearerToken);
+
+        // 보유 주식 가져옴
+        List<Possession> possessions = possessionRepository.findAllByUserId(userId);
+
+        List<HoldingsResponseDTO> dtoList = possessions.stream()
+            .map(p -> {
+                Stock stock = p.getStock();
+                int quantity = p.getQuantity();
+
+                CurrentPrice priceEntity = currentPriceRepository
+                    .findTop1ByStockIdOrderByDateDesc(stock.getId())
+                    .orElseThrow(() -> new IllegalStateException("가격 정보 없음: " + stock.getStockName()));
+
+                double currentPrice = priceEntity.getCurrentPrice();
+                double marketPrice = priceEntity.getMarketPrice();
+
+                // 변동률 계산
+                double changeRate = 0.0;
+                if (marketPrice > 0) {
+                    changeRate = ((currentPrice - marketPrice) / marketPrice) * 100.0;
+                }
+
+                // 평가금액 계산
+                double valuation = currentPrice * quantity;
+
+                return new HoldingsResponseDTO(
+                    stock.getStockName(),
+                    stock.getStockTag(),
+                    quantity,
+                    changeRate,
+                    valuation
+                );
+            })
+            .toList();
+
+        return new HoldingsListResponseDTO(dtoList);
+    }
     public AssetResponseDTO getAssets(String bearerToken) {
 
         Long userId = extractUserIdFromToken(bearerToken);
