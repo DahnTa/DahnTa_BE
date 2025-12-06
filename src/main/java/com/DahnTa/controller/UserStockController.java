@@ -1,7 +1,10 @@
 package com.DahnTa.controller;
 
+import com.DahnTa.dto.response.InterestListResponseDTO;
+import com.DahnTa.dto.response.InterestResponseDTO;
 import com.DahnTa.dto.response.TransactionListResponseDTO;
 import com.DahnTa.service.UserStockService;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -40,8 +43,18 @@ public class UserStockController {
 
     @GetMapping("/transaction")
     public ResponseEntity<TransactionListResponseDTO> getTransactions(@RequestHeader("Authorization") String token) {
+
         TransactionListResponseDTO responseDTO = userStockService.getTransactionHistory(token);
 
         return ResponseEntity.ok().body(responseDTO);
     }
+
+    @GetMapping("/interest")
+    public ResponseEntity<InterestListResponseDTO> getInterest(@RequestHeader("Authorization") String token) {
+
+        List<InterestResponseDTO> list = userStockService.getInterestList(token);
+
+        return ResponseEntity.ok().body(new InterestListResponseDTO(list));
+    }
+
 }
