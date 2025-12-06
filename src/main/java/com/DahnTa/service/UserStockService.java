@@ -4,30 +4,36 @@ import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
+import com.DahnTa.dto.response.TransactionListResponseDTO;
+import com.DahnTa.dto.response.TransactionResponseDTO;
 import com.DahnTa.entity.Interest;
 import com.DahnTa.entity.Stock;
+import com.DahnTa.entity.Transaction;
 import com.DahnTa.entity.User;
 import com.DahnTa.repository.InterestRepository;
 import com.DahnTa.repository.StockRepository;
+import com.DahnTa.repository.TransactionRepository;
 import com.DahnTa.repository.UserRepository;
+import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
-
 public class UserStockService {
     private final JWTService jwtService;
     private final StockRepository stockRepository;
     private final InterestRepository interestRepository;
     private final UserRepository userRepository;
+    private final TransactionRepository transactionRepository;
 
     public UserStockService(JWTService jwtService, StockRepository stockRepository,
-    InterestRepository interestRepository, UserRepository userRepository) {
+    InterestRepository interestRepository, UserRepository userRepository, TransactionRepository transactionRepository) {
         this.jwtService = jwtService;
         this.stockRepository = stockRepository;
         this.interestRepository = interestRepository;
         this.userRepository = userRepository;
+        this.transactionRepository = transactionRepository;
     }
 
 
@@ -60,6 +66,21 @@ public class UserStockService {
         interestRepository.save(interest);
     }
 
+    public TransactionListResponseDTO getTransactionHistory(String bearerToken) {
+        Long userId = extractUserIdFromToken(bearerToken);
+
+        List<Transaction> transactions =
+            transactionRepository.findAllByUserId(userId);
+
+        List<TransactionResponseDTO> mapped = transactions.stream()
+            .map(TransactionResponseDTO::from)
+            .toList();
+
+        return new TransactionListResponseDTO(mapped);
+    }
+
+
+    // private method
     private Long extractUserIdFromToken(String bearerToken) {
         String token = bearerToken;
         if (bearerToken.startsWith("Bearer ")) {
