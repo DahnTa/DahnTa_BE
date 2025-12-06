@@ -118,7 +118,7 @@ public class StockService {
         Stock stock = getStockByStockId(stockId);
         LocalDate today = getToday(user);
 
-        if (!possessionRepository.existsByStockAnUser(stock, user)) {
+        if (!possessionRepository.existsByStockAndUser(stock, user)) {
             throw new IllegalArgumentException("해당 주식을 보유하고 있지 않습니다.");
         }
         Possession possession = getPossessionByStockAndUser(stock, user);
