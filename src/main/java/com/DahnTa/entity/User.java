@@ -19,19 +19,19 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "userAccount", nullable = false)
+    @Column(name = "user_account", nullable = false)
     private String userAccount;
 
-    @Column(name = "userPassword", nullable = false)
+    @Column(name = "user_password", nullable = false)
     private String userPassword;
 
-    @Column(name = "userCredit", nullable = false)
+    @Column(name = "user_credit", nullable = false)
     private int userCredit;
 
-    @Column(name = "userNickName", nullable = true)
+    @Column(name = "user_nickname", nullable = true)
     private String userNickName;
 
-    @Column(name = "userProfileImageUrl", nullable = true)
+    @Column(name = "user_profile_image_url", nullable = true)
     private String userProfileImageUrl;
 
 
