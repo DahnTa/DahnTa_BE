@@ -4,6 +4,7 @@ import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
+import com.DahnTa.Mapper.TransactionMapper;
 import com.DahnTa.dto.response.AssetResponseDTO;
 import com.DahnTa.dto.response.HoldingsListResponseDTO;
 import com.DahnTa.dto.response.HoldingsResponseDTO;
@@ -37,11 +38,12 @@ public class UserStockService {
     private final TransactionRepository transactionRepository;
     private final CurrentPriceRepository currentPriceRepository;
     private final PossessionRepository possessionRepository;
+    private final TransactionMapper transactionMapper;
 
     public UserStockService(JWTService jwtService, StockRepository stockRepository,
     InterestRepository interestRepository, UserRepository userRepository,
         TransactionRepository transactionRepository, CurrentPriceRepository currentPriceRepository,
-        PossessionRepository possessionRepository) {
+        PossessionRepository possessionRepository, TransactionMapper transactionMapper) {
         this.jwtService = jwtService;
         this.stockRepository = stockRepository;
         this.interestRepository = interestRepository;
@@ -49,6 +51,7 @@ public class UserStockService {
         this.transactionRepository = transactionRepository;
         this.currentPriceRepository = currentPriceRepository;
         this.possessionRepository = possessionRepository;
+        this.transactionMapper = transactionMapper;
     }
 
 
@@ -182,7 +185,7 @@ public class UserStockService {
         List<Transaction> transactions = transactionRepository.findAllByUserId(userId);
 
         List<TransactionResponseDTO> mapped = transactions.stream()
-            .map(this::toTransactionDTO)
+            .map(transactionMapper::toDTO)
             .toList();
 
         return new TransactionListResponseDTO(mapped);
@@ -225,16 +228,5 @@ public class UserStockService {
         return ((current - market) / market) * 100.0;
     }
 
-    // Entity → DTO 변환 전용 메서드
-    private TransactionResponseDTO toTransactionDTO(Transaction tx) {
-        return new TransactionResponseDTO(
-            tx.getDate(),
-            tx.getStock().getStockName(),
-            tx.getStock().getStockTag(),
-            tx.getType(),
-            tx.getQuantity(),
-            tx.getTotalAmount()
-        );
-    }
 
 }

@@ -1,5 +1,6 @@
 package com.DahnTa.service;
 
+import com.DahnTa.Mapper.UserMapper;
 import com.DahnTa.dto.request.LoginRequestDTO;
 import com.DahnTa.dto.request.PasswordRequestDTO;
 import com.DahnTa.dto.response.LoginResponseDTO;
@@ -13,15 +14,18 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthService {
     private AuthRepository authRepository;
     private JWTService jwtService;
+    private UserMapper userMapper;
 
-    public AuthService(AuthRepository authRepository, JWTService jwtService) {
+    public AuthService(AuthRepository authRepository, JWTService jwtService,
+        UserMapper userMapper) {
         this.authRepository = authRepository;
         this.jwtService = jwtService;
+        this.userMapper = userMapper;
     }
 
 
     public void signupUser(SignUpRequestDTO signUpRequestDTO) {
-         User userEntity = toEntity(signUpRequestDTO);
+         User userEntity = userMapper.toEntity(signUpRequestDTO);
          authRepository.save(userEntity);
     }
 
@@ -54,16 +58,6 @@ public class AuthService {
             .orElseThrow(() -> new RuntimeException("User not found"));
 
         user.updatePassword(dto.getPassword());
-    }
-
-
-    // dto to entity
-    // @todo : builder pattern으로 개선 필요
-    // @todo : password 암호화하여 저장 필요
-    private User toEntity(SignUpRequestDTO signUpRequestDTO) {
-         User userEntity = new User(signUpRequestDTO.getUserAccount(), signUpRequestDTO.getUserPassword(),
-             signUpRequestDTO.getUserNickName(), 10000000, signUpRequestDTO.getUserProfileImageUrl());
-        return userEntity;
     }
 
 }
