@@ -19,9 +19,9 @@ public class UserStockController {
 
     @PostMapping("/{id}/dislike")
     public ResponseEntity<?> dislikePost(@RequestHeader("Authorization") String token,
-        @PathVariable Long id) throws Exception {
+        @PathVariable("id") Long stockId) throws Exception {
 
-        userStockService.applyDislike(id, token);
+        userStockService.applyDislike(stockId, token);
 
         return new ResponseEntity<>(HttpStatus.OK);
     }
@@ -29,9 +29,9 @@ public class UserStockController {
 
     @PostMapping("/{id}/like")
     public ResponseEntity<?> likePost(@RequestHeader("Authorization") String token,
-        @PathVariable Long id) {
+        @PathVariable("id") Long stockId) {
 
-        userStockService.applyLike(id, token);
+        userStockService.applyLike(stockId, token);
 
         return new ResponseEntity<>(HttpStatus.OK);
     }
