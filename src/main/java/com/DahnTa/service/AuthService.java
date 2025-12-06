@@ -9,7 +9,7 @@ import com.DahnTa.entity.Enum.ErrorCode;
 import com.DahnTa.entity.User;
 import com.DahnTa.exception.AuthException;
 import com.DahnTa.jwt.JwtTokenProvider;
-import com.DahnTa.repository.AuthRepository;
+import com.DahnTa.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,16 +17,16 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class AuthService {
 
-    private final AuthRepository authRepository;
+    private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final JwtTokenProvider jwtTokenProvider;
     private final RefreshTokenService refreshTokenService;
     private final PasswordEncoder passwordEncoder;
 
-    public AuthService(AuthRepository authRepository, UserMapper userMapper,
+    public AuthService(UserRepository userRepository, UserMapper userMapper,
         JwtTokenProvider jwtTokenProvider, RefreshTokenService refreshTokenService,
         PasswordEncoder passwordEncoder) {
-        this.authRepository = authRepository;
+        this.userRepository = userRepository;
         this.userMapper = userMapper;
         this.jwtTokenProvider = jwtTokenProvider;
         this.refreshTokenService = refreshTokenService;
@@ -34,17 +34,17 @@ public class AuthService {
     }
 
     public void signupUser(SignUpRequestDTO signUpRequestDTO) {
-        if (authRepository.existsByUserAccount(signUpRequestDTO.getUserAccount())) {
+        if (userRepository.existsByUserAccount(signUpRequestDTO.getUserAccount())) {
             throw new AuthException(ErrorCode.ACCOUNT_ALREADY_EXISTS);
         }
         User userEntity = userMapper.toEntity(signUpRequestDTO);
         userEntity.encodePassword(passwordEncoder);
-        authRepository.save(userEntity);
+        userRepository.save(userEntity);
     }
 
 
     public LoginResponseDTO authenticateToken(LoginRequestDTO loginRequestDTO) {
-        User user = authRepository.findByUserAccount(loginRequestDTO.getUserAccount())
+        User user = userRepository.findByUserAccount(loginRequestDTO.getUserAccount())
             .orElseThrow(() -> new AuthException(ErrorCode.USER_NOT_FOUND));
 
         if (!passwordEncoder.matches(loginRequestDTO.getUserPassword(), user.getUserPassword())) {

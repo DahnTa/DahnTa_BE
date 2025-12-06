@@ -75,4 +75,7 @@ public class User {
     public void encodePassword(PasswordEncoder passwordEncoder) {
         this.userPassword = passwordEncoder.encode(this.userPassword);
     }
+
+    public void setId(long userId) {    // test 코드용 메서드
+    }
 }

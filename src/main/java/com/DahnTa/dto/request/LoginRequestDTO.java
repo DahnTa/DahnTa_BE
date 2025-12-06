@@ -7,9 +7,9 @@ public class LoginRequestDTO {
 
 
     // 기본 생성자
-    public LoginRequestDTO(String userPassword, String userAccount) {
-        this.userPassword = userPassword;
+    public LoginRequestDTO(String userAccount, String userPassword) {
         this.userAccount = userAccount;
+        this.userPassword = userPassword;
     }
 
 
