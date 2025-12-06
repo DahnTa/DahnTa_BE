@@ -21,6 +21,8 @@ import com.DahnTa.entity.Possession;
 import com.DahnTa.entity.Reddit;
 import com.DahnTa.entity.Stock;
 import com.DahnTa.entity.TotalAnalysis;
+import com.DahnTa.entity.Transaction;
+import com.DahnTa.entity.TransactionType;
 import com.DahnTa.entity.User;
 import com.DahnTa.repository.CompanyFinanceRepository;
 import com.DahnTa.repository.CurrentPriceRepository;
@@ -31,6 +33,7 @@ import com.DahnTa.repository.PossessionRepository;
 import com.DahnTa.repository.RedditRepository;
 import com.DahnTa.repository.StockRepository;
 import com.DahnTa.repository.TotalAnalysisRepository;
+import com.DahnTa.repository.TransactionRepository;
 import com.DahnTa.util.CsvLoadUtil;
 import com.DahnTa.util.RemoveGameDataUtil;
 import java.time.LocalDate;
@@ -56,6 +59,7 @@ public class StockService {
     private final NewsRepository newsRepository;
     private final RedditRepository redditRepository;
     private final TotalAnalysisRepository totalAnalysisRepository;
+    private final TransactionRepository transactionRepository;
     private final CsvLoadUtil csvLoadUtil;
     private final RemoveGameDataUtil removeGameDataUtil;
 
@@ -64,6 +68,7 @@ public class StockService {
         CompanyFinanceRepository companyFinanceRepository,
         MacroIndicatorsRepository macroIndicatorsRepository, NewsRepository newsRepository,
         RedditRepository redditRepository, TotalAnalysisRepository totalAnalysisRepository,
+        TransactionRepository transactionRepository,
         CsvLoadUtil csvLoadUtil, RemoveGameDataUtil removeGameDataUtil) {
         this.gameDateRepository = gameDateRepository;
         this.stockRepository = stockRepository;
@@ -74,6 +79,7 @@ public class StockService {
         this.newsRepository = newsRepository;
         this.redditRepository = redditRepository;
         this.totalAnalysisRepository = totalAnalysisRepository;
+        this.transactionRepository = transactionRepository;
         this.csvLoadUtil = csvLoadUtil;
         this.removeGameDataUtil = removeGameDataUtil;
     }
@@ -176,8 +182,9 @@ public class StockService {
 
         LocalDate today = getToday(user);
         CurrentPrice currentPrice = getCurrentPriceByStockAndDate(stock, today);
+        double averagePrice = getAveragePrice(stock, user);
 
-        return StockOrderResponse.create(quantity, ,
+        return StockOrderResponse.create(quantity, averagePrice,
             currentPrice.calculateAvailableOrderAmount(user.getUserCredit()));
     }
 
@@ -290,6 +297,20 @@ public class StockService {
         }
 
         return marketPrices;
+    }
+
+    private double getAveragePrice(Stock stock, User user) {
+        int transactionCount = 0;
+        double totalAmount = 0;
+        List<Transaction> transactions = transactionRepository.findByStockAndUser(stock, user);
+        for (Transaction transaction : transactions) {
+            if (transaction.getType().equals(TransactionType.매수)) {
+                totalAmount += transaction.getTotalAmount();
+                transactionCount += 1;
+            }
+        }
+
+        return totalAmount/transactionCount;
     }
 
     private Stock getStockByStockId(Long stockId) {
