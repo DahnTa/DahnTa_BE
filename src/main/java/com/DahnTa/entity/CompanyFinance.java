@@ -10,7 +10,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.LocalDate;
-import lombok.Builder;
 import lombok.Getter;
 
 @Entity
@@ -46,15 +45,8 @@ public class CompanyFinance {
         this.userId = userId;
     }
 
-    @Builder
-    public static CompanyFinance create(Stock stock, LocalDate date, String content,
-        Long userId) {
+    public static CompanyFinance create(Stock stock, LocalDate date, String content, Long userId) {
 
-        return CompanyFinance.builder()
-            .stock(stock)
-            .date(date)
-            .content(content)
-            .userId(userId)
-            .build();
+        return new CompanyFinance(stock, date, content, userId);
     }
 }

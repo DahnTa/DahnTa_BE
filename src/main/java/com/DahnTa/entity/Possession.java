@@ -11,7 +11,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-import lombok.Builder;
 import lombok.Getter;
 
 @Entity
@@ -42,14 +41,9 @@ public class Possession {
         this.quantity = quantity;
     }
 
-    @Builder
     public static Possession create(Stock stock, User user, int quantity) {
 
-        return Possession.builder()
-            .stock(stock)
-            .user(user)
-            .quantity(quantity)
-            .build();
+        return new Possession(stock, user, quantity);
     }
 
     public void increaseQuantity(int quantity) {

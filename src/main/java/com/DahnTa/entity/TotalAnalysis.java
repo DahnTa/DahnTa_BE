@@ -10,7 +10,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.LocalDate;
-import lombok.Builder;
 import lombok.Getter;
 
 @Entity
@@ -50,16 +49,9 @@ public class TotalAnalysis {
         this.userId = userId;
     }
 
-    @Builder
     public static TotalAnalysis create(Stock stock, LocalDate date, String companyName, String analyze,
         Long userId) {
 
-        return TotalAnalysis.builder()
-            .stock(stock)
-            .date(date)
-            .companyName(companyName)
-            .analyze(analyze)
-            .userId(userId)
-            .build();
+        return new TotalAnalysis(stock, date, companyName, analyze, userId);
     }
 }

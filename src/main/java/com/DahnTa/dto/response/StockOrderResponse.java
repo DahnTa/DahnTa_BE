@@ -8,10 +8,6 @@ public record StockOrderResponse(int quantity, double averageUnitPrice, double a
     public static StockOrderResponse create(int quantity, double averageUnitPrice,
         double availableOrderAmount) {
 
-        return StockOrderResponse.builder()
-            .quantity(quantity)
-            .averageUnitPrice(averageUnitPrice)
-            .availableOrderAmount(availableOrderAmount)
-            .build();
+        return new StockOrderResponse(quantity, averageUnitPrice, availableOrderAmount);
     }
 }

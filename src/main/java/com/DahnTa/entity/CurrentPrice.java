@@ -12,7 +12,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.LocalDate;
-import lombok.Builder;
 import lombok.Getter;
 
 @Entity
@@ -54,17 +53,10 @@ public class CurrentPrice {
         this.userId = userId;
     }
 
-    @Builder
     public static CurrentPrice create(Stock stock, LocalDate date, double currentPrice, double marketPrice,
         Long userId) {
 
-        return CurrentPrice.builder()
-            .stock(stock)
-            .date(date)
-            .currentPrice(currentPrice)
-            .marketPrice(marketPrice)
-            .userId(userId)
-            .build();
+        return new CurrentPrice(stock, date, currentPrice, marketPrice, userId);
     }
 
     public double calculateChangeRate(CurrentPrice previous) {
