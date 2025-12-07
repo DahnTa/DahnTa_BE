@@ -26,7 +26,6 @@ public class RefreshToken {
     @JoinColumn(name = "user_id", unique = true)
     private User user;
 
-
     // @todo : snake case
     @Column(name = "refresh_token", nullable = false)
     private String refreshToken;
@@ -40,6 +39,4 @@ public class RefreshToken {
     public void updateRefreshToken(String newRefreshToken) {
         this.refreshToken = newRefreshToken;
     }
-
-
 }

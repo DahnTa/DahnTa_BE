@@ -34,7 +34,7 @@ public class GameDate {
     @Column(name = "end_date", nullable = false)
     private LocalDate endDate;
 
-    @Column(name = "day", nullable = false)
+    @Column(name = "`day`", nullable = false)
     private int day;
 
     protected GameDate() {}

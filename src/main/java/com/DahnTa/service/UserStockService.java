@@ -31,7 +31,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class UserStockService {
-    private final JWTService jwtService;
+
     private final StockRepository stockRepository;
     private final InterestRepository interestRepository;
     private final UserRepository userRepository;
@@ -40,11 +40,10 @@ public class UserStockService {
     private final PossessionRepository possessionRepository;
     private final TransactionMapper transactionMapper;
 
-    public UserStockService(JWTService jwtService, StockRepository stockRepository,
-    InterestRepository interestRepository, UserRepository userRepository,
-        TransactionRepository transactionRepository, CurrentPriceRepository currentPriceRepository,
-        PossessionRepository possessionRepository, TransactionMapper transactionMapper) {
-        this.jwtService = jwtService;
+    public UserStockService(StockRepository stockRepository, InterestRepository interestRepository,
+        UserRepository userRepository, TransactionRepository transactionRepository,
+        CurrentPriceRepository currentPriceRepository, PossessionRepository possessionRepository,
+        TransactionMapper transactionMapper) {
         this.stockRepository = stockRepository;
         this.interestRepository = interestRepository;
         this.userRepository = userRepository;
@@ -54,10 +53,8 @@ public class UserStockService {
         this.transactionMapper = transactionMapper;
     }
 
-
-    public HoldingsListResponseDTO getHoldings(String bearerToken) {
-        Long userId = extractUserIdFromToken(bearerToken);
-        List<Possession> possessions = possessionRepository.findAllByUserId(userId);
+    public HoldingsListResponseDTO getHoldings(User user) {
+        List<Possession> possessions = possessionRepository.findAllByUser(user);
 
         List<HoldingsResponseDTO> dtoList = possessions.stream()
             .map(p -> {
@@ -85,14 +82,9 @@ public class UserStockService {
     }
 
 
-    public AssetResponseDTO getAssets(String bearerToken) {
-        Long userId = extractUserIdFromToken(bearerToken);
-
-        User user = userRepository.findById(userId)
-            .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "User not found"));
-
+    public AssetResponseDTO getAssets(User user) {
         double userCredit = user.getUserCredit();
-        List<Possession> possessions = possessionRepository.findAllByUserId(userId);
+        List<Possession> possessions = possessionRepository.findAllByUser(user);
 
         double stockValuation = possessions.stream()
             .mapToDouble(p -> {
@@ -102,7 +94,7 @@ public class UserStockService {
             .sum();
 
         double totalAmount = userCredit + stockValuation;
-        double seedMoney = 10000000.0;
+        double seedMoney = 10000.0;
         double creditChangeAmount = totalAmount - seedMoney;
         double creditChangeRate = (creditChangeAmount / seedMoney) * 100;
 
@@ -115,10 +107,8 @@ public class UserStockService {
         );
     }
 
-    public List<InterestResponseDTO> getInterestList(String bearerToken) {
-        Long userId = extractUserIdFromToken(bearerToken);
-
-        List<Interest> interests = interestRepository.findAllByUserId(userId);
+    public List<InterestResponseDTO> getInterestList(User user) {
+        List<Interest> interests = interestRepository.findAllByUser(user);
 
         return interests.stream()
             .map(interest -> {
@@ -150,12 +140,10 @@ public class UserStockService {
 
 
     @Transactional
-    public void applyDislike(Long stockId, String bearerToken) {
-        Long userId = extractUserIdFromToken(bearerToken);
-
+    public void applyDislike(Long stockId, User user) {
         validateStock(stockId);
 
-        Interest interest = interestRepository.findByUserIdAndStockId(userId, stockId)
+        Interest interest = interestRepository.findByUserAndStockId(user, stockId)
             .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Interest not found"));
 
         interestRepository.delete(interest);
@@ -163,15 +151,10 @@ public class UserStockService {
 
 
     @Transactional
-    public void applyLike(Long stockId, String bearerToken) {
-        Long userId = extractUserIdFromToken(bearerToken);
-
+    public void applyLike(Long stockId, User user) {
         Stock stock = validateStock(stockId);
 
-        User user = userRepository.findById(userId)
-            .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "User not found"));
-
-        if (interestRepository.existsByUserIdAndStockId(userId, stockId)) {
+        if (interestRepository.existsByUserAndStockId(user, stockId)) {
             throw new ResponseStatusException(CONFLICT, "Already interested");
         }
 
@@ -179,10 +162,8 @@ public class UserStockService {
         interestRepository.save(interest);
     }
 
-    public TransactionListResponseDTO getTransactionHistory(String bearerToken) {
-        Long userId = extractUserIdFromToken(bearerToken);
-
-        List<Transaction> transactions = transactionRepository.findAllByUserId(userId);
+    public TransactionListResponseDTO getTransactionHistory(User user) {
+        List<Transaction> transactions = transactionRepository.findAllByUser(user);
 
         List<TransactionResponseDTO> mapped = transactions.stream()
             .map(transactionMapper::toDTO)
@@ -190,21 +171,6 @@ public class UserStockService {
 
         return new TransactionListResponseDTO(mapped);
     }
-
-
-    // private method
-    private Long extractUserIdFromToken(String bearerToken) {
-        String token = bearerToken;
-        if (bearerToken.startsWith("Bearer ")) {
-            token = bearerToken.substring(7);
-        }
-
-        if (!jwtService.validateToken(token)) {
-            throw new ResponseStatusException(UNAUTHORIZED, "Invalid token");
-        }
-        return jwtService.extractUserId(token);
-    }
-
 
     private Stock validateStock(Long stockId) {
         return stockRepository.findById(stockId)
@@ -227,6 +193,4 @@ public class UserStockService {
         if (market <= 0) return 0.0;
         return ((current - market) / market) * 100.0;
     }
-
-
 }

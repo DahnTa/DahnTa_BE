@@ -10,11 +10,12 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Entity
 @Table(name = "USER_TB")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Builder
+
 @Getter
 public class User {
     @Id
@@ -51,11 +52,6 @@ public class User {
         this.userPassword = userPassword;
     }
 
-    public void validatePassword(String inputPassword) {
-        if (!this.userPassword.equals(inputPassword)) {
-            throw new RuntimeException("Password incorrect");
-        }
-
     public void increaseCredit(double amount) {
         this.userCredit += amount;
     }
@@ -71,5 +67,9 @@ public class User {
     public double calculateReturnRate(double finalAmount, double initialFunds) {
         return ((double) finalAmount - initialFunds) / initialFunds * 100.0;
 
+    }
+
+    public void encodePassword(PasswordEncoder passwordEncoder) {
+        this.userPassword = passwordEncoder.encode(this.userPassword);
     }
 }
