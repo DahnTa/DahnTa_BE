@@ -13,7 +13,7 @@ import java.time.LocalDate;
 import lombok.Getter;
 
 @Entity
-@Table(name = "TOTAL_ANALYSIS_TB")
+@Table(name = "total_analysis_tb")
 @Getter
 public class TotalAnalysis {
 
@@ -32,7 +32,7 @@ public class TotalAnalysis {
     @Column(name = "company_name", nullable = false)
     private String companyName;
 
-    @Column(name = "analyze", nullable = false)
+    @Column(name = "`analyze`", nullable = false)
     private String analyze;
 
     @Column(name = "user_id", nullable = false)

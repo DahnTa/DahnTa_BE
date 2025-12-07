@@ -13,7 +13,7 @@ import java.time.LocalDate;
 import lombok.Getter;
 
 @Entity
-@Table(name = "GAME_DATE_TB")
+@Table(name = "game_date_tb")
 @Getter
 public class GameDate {
 

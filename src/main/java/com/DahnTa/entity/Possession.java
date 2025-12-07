@@ -14,7 +14,7 @@ import jakarta.persistence.Table;
 import lombok.Getter;
 
 @Entity
-@Table(name = "NEWS_TB")
+@Table(name = "possession_tb")
 @Getter
 public class Possession {
 

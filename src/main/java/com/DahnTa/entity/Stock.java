@@ -9,7 +9,7 @@ import jakarta.persistence.Table;
 import lombok.Getter;
 
 @Entity
-@Table(name = "STOCK_TB")
+@Table(name = "stock_tb")
 @Getter
 public class Stock {
 

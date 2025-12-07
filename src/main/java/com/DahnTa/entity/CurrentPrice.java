@@ -15,7 +15,7 @@ import java.time.LocalDate;
 import lombok.Getter;
 
 @Entity
-@Table(name = "CURRENT_PRICE_TB")
+@Table(name = "current_price_tb")
 @Getter
 public class CurrentPrice {
 

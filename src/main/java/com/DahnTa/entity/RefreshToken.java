@@ -14,7 +14,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "REFRESH_TOKEN_TB")
+@Table(name = "refresh_token_tb")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 public class RefreshToken {

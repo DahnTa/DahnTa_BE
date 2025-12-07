@@ -13,7 +13,7 @@ import java.time.LocalDate;
 import lombok.Getter;
 
 @Entity
-@Table(name = "REDDIT_TB")
+@Table(name = "reddit_tb")
 @Getter
 public class Reddit {
 

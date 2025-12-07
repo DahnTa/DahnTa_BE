@@ -11,7 +11,7 @@ import java.time.LocalDate;
 import lombok.Getter;
 
 @Entity
-@Table(name = "MACRO_INDICATORS_TB")
+@Table(name = "macro_indicators_tb")
 @Getter
 public class MacroIndicators {
 

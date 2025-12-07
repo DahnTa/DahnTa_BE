@@ -13,7 +13,7 @@ import java.time.LocalDate;
 import lombok.Getter;
 
 @Entity
-@Table(name = "COMPANY_FINANCE_TB")
+@Table(name = "company_finance_tb")
 @Getter
 public class CompanyFinance {
 

@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Entity
-@Table(name = "USER_TB")
+@Table(name = "user_tb")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 
 @Getter
