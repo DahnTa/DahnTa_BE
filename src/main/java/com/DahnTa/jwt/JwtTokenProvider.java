@@ -1,5 +1,6 @@
 package com.DahnTa.jwt;
 
+import com.DahnTa.entity.Enum.JwtClaims;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
@@ -23,8 +24,8 @@ public class JwtTokenProvider {
 
     public String generateAccessToken(Long userId, String userAccount) {
         return Jwts.builder()
-            .claim("userId", userId)
-            .claim("userAccount", userAccount)
+            .claim(JwtClaims.USER_ID.getValue(), userId)
+            .claim(JwtClaims.USER_ACCOUNT.getValue(), userAccount)
             .issuedAt(new Date())
             .expiration(new Date(System.currentTimeMillis() + jwtProperties.getAccessTokenValidity()))
             .signWith(getSigningKey())
@@ -33,7 +34,7 @@ public class JwtTokenProvider {
 
     public String generateRefreshToken(Long userId) {
         return Jwts.builder()
-            .claim("userId", userId)
+            .claim(JwtClaims.USER_ID.getValue(), userId)
             .issuedAt(new Date())
             .expiration(new Date(System.currentTimeMillis() + jwtProperties.getRefreshTokenValidity()))
             .signWith(getSigningKey())
@@ -59,6 +60,6 @@ public class JwtTokenProvider {
             .parseSignedClaims(token)
             .getPayload();
 
-        return claims.get("userId", Long.class);
+        return claims.get(JwtClaims.USER_ID.getValue(), Long.class);
     }
 }

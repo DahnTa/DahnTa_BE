@@ -1,5 +1,6 @@
 package com.DahnTa.entity;
 
+import com.DahnTa.entity.Enum.TransactionType;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -46,6 +47,4 @@ public class Transaction {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     @Column(name = "date", nullable = false)
     private LocalDate date;
-
-
 }

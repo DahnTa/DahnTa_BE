@@ -18,6 +18,8 @@ import lombok.Getter;
 @Getter
 public class GameDate {
 
+    public static final int DAY_INCREMENT = 1;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -58,6 +60,6 @@ public class GameDate {
     }
 
     public void updateDay() {
-        this.day += 1;
+        this.day += DAY_INCREMENT;
     }
 }

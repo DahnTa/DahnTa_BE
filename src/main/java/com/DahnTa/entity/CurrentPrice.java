@@ -1,5 +1,7 @@
 package com.DahnTa.entity;
 
+import com.DahnTa.entity.Enum.ErrorCode;
+import com.DahnTa.exception.StockException;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -17,6 +19,8 @@ import lombok.Getter;
 @Table(name = "CURRENT_PRICE_TB")
 @Getter
 public class CurrentPrice {
+
+    public static final double PERCENT = 100.0;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -65,7 +69,7 @@ public class CurrentPrice {
 
     public double calculateChangeRate(CurrentPrice previous) {
 
-        return ((double) (this.currentPrice - previous.currentPrice) / previous.currentPrice) * 100.0;
+        return (this.currentPrice - previous.currentPrice) / previous.currentPrice * PERCENT;
     }
 
     public double calculateChangeAmount(CurrentPrice previous) {
@@ -79,8 +83,8 @@ public class CurrentPrice {
     }
 
     public void validateBuyQuantity(double userCredit, double buyQuantity) {
-        if (userCredit > this.currentPrice * buyQuantity) {
-            throw new IllegalArgumentException("사용자의 보유 금액이 부족합니다.");
+        if (userCredit < this.currentPrice * buyQuantity) {
+            throw new StockException(ErrorCode.INSUFFICIENT_CREDIT);
         }
     }
 }

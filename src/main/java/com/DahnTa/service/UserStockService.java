@@ -1,9 +1,5 @@
 package com.DahnTa.service;
 
-import static org.springframework.http.HttpStatus.CONFLICT;
-import static org.springframework.http.HttpStatus.NOT_FOUND;
-import static org.springframework.http.HttpStatus.UNAUTHORIZED;
-
 import com.DahnTa.Mapper.TransactionMapper;
 import com.DahnTa.dto.response.AssetResponseDTO;
 import com.DahnTa.dto.response.HoldingsListResponseDTO;
@@ -12,41 +8,41 @@ import com.DahnTa.dto.response.InterestResponseDTO;
 import com.DahnTa.dto.response.TransactionListResponseDTO;
 import com.DahnTa.dto.response.TransactionResponseDTO;
 import com.DahnTa.entity.CurrentPrice;
+import com.DahnTa.entity.Enum.DateOffset;
+import com.DahnTa.entity.Enum.ErrorCode;
 import com.DahnTa.entity.Interest;
 import com.DahnTa.entity.Possession;
 import com.DahnTa.entity.Stock;
 import com.DahnTa.entity.Transaction;
 import com.DahnTa.entity.User;
+import com.DahnTa.exception.UserStockException;
 import com.DahnTa.repository.CurrentPriceRepository;
 import com.DahnTa.repository.InterestRepository;
 import com.DahnTa.repository.PossessionRepository;
 import com.DahnTa.repository.StockRepository;
 import com.DahnTa.repository.TransactionRepository;
-import com.DahnTa.repository.UserRepository;
 import java.util.List;
-import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class UserStockService {
 
+    private static final double SEED_MONEY = 10000.0;
+    public static final double PERCENT = 100.0;
+
     private final StockRepository stockRepository;
     private final InterestRepository interestRepository;
-    private final UserRepository userRepository;
     private final TransactionRepository transactionRepository;
     private final CurrentPriceRepository currentPriceRepository;
     private final PossessionRepository possessionRepository;
     private final TransactionMapper transactionMapper;
 
     public UserStockService(StockRepository stockRepository, InterestRepository interestRepository,
-        UserRepository userRepository, TransactionRepository transactionRepository,
-        CurrentPriceRepository currentPriceRepository, PossessionRepository possessionRepository,
-        TransactionMapper transactionMapper) {
+        TransactionRepository transactionRepository, CurrentPriceRepository currentPriceRepository,
+        PossessionRepository possessionRepository, TransactionMapper transactionMapper) {
         this.stockRepository = stockRepository;
         this.interestRepository = interestRepository;
-        this.userRepository = userRepository;
         this.transactionRepository = transactionRepository;
         this.currentPriceRepository = currentPriceRepository;
         this.possessionRepository = possessionRepository;
@@ -94,9 +90,9 @@ public class UserStockService {
             .sum();
 
         double totalAmount = userCredit + stockValuation;
-        double seedMoney = 10000.0;
+        double seedMoney = SEED_MONEY;
         double creditChangeAmount = totalAmount - seedMoney;
-        double creditChangeRate = (creditChangeAmount / seedMoney) * 100;
+        double creditChangeRate = (creditChangeAmount / seedMoney) * PERCENT;
 
         return new AssetResponseDTO(
             totalAmount,
@@ -122,8 +118,8 @@ public class UserStockService {
 
                 // 어제 대비 변동률 계산(최신순으로 정렬 돼 있음)
                 if (prices.size() > 1) {
-                    double yesterday = prices.get(1).getCurrentPrice();
-                    changeRate = ((today - yesterday) / yesterday) * 100;
+                    double yesterday = prices.get(DateOffset.PREVIOUS_DAY.getDays()).getCurrentPrice();
+                    changeRate = ((today - yesterday) / yesterday) * PERCENT;
                 }
 
                 return new InterestResponseDTO(
@@ -135,16 +131,14 @@ public class UserStockService {
                 );
             })
             .toList();
-
     }
-
 
     @Transactional
     public void applyDislike(Long stockId, User user) {
         validateStock(stockId);
 
         Interest interest = interestRepository.findByUserAndStockId(user, stockId)
-            .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Interest not found"));
+            .orElseThrow(() -> new UserStockException(ErrorCode.INTEREST_NOT_FOUND));
 
         interestRepository.delete(interest);
     }
@@ -155,7 +149,7 @@ public class UserStockService {
         Stock stock = validateStock(stockId);
 
         if (interestRepository.existsByUserAndStockId(user, stockId)) {
-            throw new ResponseStatusException(CONFLICT, "Already interested");
+            throw new UserStockException(ErrorCode.ALREADY_INTERESTED);
         }
 
         Interest interest = new Interest(user, stock);
@@ -174,23 +168,17 @@ public class UserStockService {
 
     private Stock validateStock(Long stockId) {
         return stockRepository.findById(stockId)
-            .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Stock not found"));
+            .orElseThrow(() -> new UserStockException(ErrorCode.STOCK_NOT_FOUND));
     }
 
 
     private CurrentPrice fetchCurrentPrice(Stock stock) {
-        Optional<CurrentPrice> priceBox = currentPriceRepository
-            .findTop1ByStockIdOrderByDateDesc(stock.getId());
-
-        if (priceBox.isEmpty()) {
-            throw new IllegalStateException("가격 정보 없음: " + stock.getStockName());
-        }
-
-        return priceBox.get();
+        return currentPriceRepository.findTop1ByStockIdOrderByDateDesc(stock.getId())
+            .orElseThrow(() -> new UserStockException(ErrorCode.PRICE_INFO_NOT_FOUND));
     }
 
     private double calculateChangeRate(double current, double market) {
         if (market <= 0) return 0.0;
-        return ((current - market) / market) * 100.0;
+        return ((current - market) / market) * PERCENT;
     }
 }

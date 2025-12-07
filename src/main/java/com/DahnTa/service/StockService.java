@@ -15,6 +15,10 @@ import com.DahnTa.dto.response.StockResponse;
 import com.DahnTa.dto.response.StockTotalAnalysisResponse;
 import com.DahnTa.entity.CompanyFinance;
 import com.DahnTa.entity.CurrentPrice;
+import com.DahnTa.entity.Enum.DateOffset;
+import com.DahnTa.entity.Enum.ErrorCode;
+import com.DahnTa.entity.Enum.GameDateSetting;
+import com.DahnTa.entity.Enum.TransactionType;
 import com.DahnTa.entity.GameDate;
 import com.DahnTa.entity.MacroIndicators;
 import com.DahnTa.entity.News;
@@ -23,8 +27,8 @@ import com.DahnTa.entity.Reddit;
 import com.DahnTa.entity.Stock;
 import com.DahnTa.entity.TotalAnalysis;
 import com.DahnTa.entity.Transaction;
-import com.DahnTa.entity.TransactionType;
 import com.DahnTa.entity.User;
+import com.DahnTa.exception.StockException;
 import com.DahnTa.repository.CompanyFinanceRepository;
 import com.DahnTa.repository.CurrentPriceRepository;
 import com.DahnTa.repository.GameDateRepository;
@@ -49,7 +53,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class StockService {
 
-    private static final int INITIAL_FUNDS = 10000;
+    private static final double INITIAL_FUNDS = 10000.0;
+    private static final int ONE_TRANSACTION = 1;
 
     private final GameDateRepository gameDateRepository;
     private final StockRepository stockRepository;
@@ -86,17 +91,19 @@ public class StockService {
     }
 
     public void gameStart(User user) {
-        LocalDate start = LocalDate.of(2024, 10, 1);
-        LocalDate end = LocalDate.of(2025, 10, 1);
-        LocalDate lastestStart = end.minusDays(29);
+        LocalDate start = GameDateSetting.START.getDateValue();
+        LocalDate end = GameDateSetting.END.getDateValue();
+        LocalDate lastestStart = end.minusDays(GameDateSetting.DAYS_TO_SUBTRACT.getNumberValue());
 
         long days = ChronoUnit.DAYS.between(start, lastestStart);
-        long randomOffset = ThreadLocalRandom.current().nextLong(0, days + 1);
+        long randomOffset = ThreadLocalRandom.current()
+            .nextLong(0, days + GameDateSetting.START_DAY.getNumberValue());
 
         LocalDate randomStart = start.plusDays(randomOffset);
-        LocalDate randomEnd = randomStart.plusDays(19);
+        LocalDate randomEnd = randomStart.plusDays(GameDateSetting.DAY_DURATION.getNumberValue());
 
-        GameDate gameDate = GameDate.create(user, randomStart, randomEnd, 1);
+        GameDate gameDate = GameDate.create(user, randomStart, randomEnd,
+            GameDateSetting.START_DAY.getNumberValue());
         gameDateRepository.save(gameDate);
 
         setGameDataByUser(user, randomStart, randomEnd);
@@ -132,7 +139,7 @@ public class StockService {
         LocalDate today = getToday(user);
 
         if (!possessionRepository.existsByStockAndUser(stock, user)) {
-            throw new IllegalArgumentException("해당 주식을 보유하고 있지 않습니다.");
+            throw new StockException(ErrorCode.POSSESSION_NOT_FOUND);
         }
         Possession possession = getPossessionByStockAndUser(stock, user);
         possession.validateSellQuantity(request.getQuantity());
@@ -273,12 +280,14 @@ public class StockService {
     }
 
     private double getChangeRate(Stock stock, CurrentPrice currentPrice, LocalDate date) {
-        CurrentPrice yesterdayPrice = getCurrentPriceByStockAndDate(stock, date.minusDays(1));
+        CurrentPrice yesterdayPrice = getCurrentPriceByStockAndDate(stock, date.minusDays(
+            DateOffset.PREVIOUS_DAY.getDays()));
         return currentPrice.calculateChangeRate(yesterdayPrice);
     }
 
     private double getChangeAmount(Stock stock, CurrentPrice currentPrice, LocalDate date) {
-        CurrentPrice yesterdayPrice = getCurrentPriceByStockAndDate(stock, date.minusDays(1));
+        CurrentPrice yesterdayPrice = getCurrentPriceByStockAndDate(stock,
+            date.minusDays(DateOffset.PREVIOUS_DAY.getDays()));
         return currentPrice.calculateChangeAmount(yesterdayPrice);
     }
 
@@ -287,13 +296,14 @@ public class StockService {
         int day = gameDate.getDay();
         LocalDate startDate = gameDate.getStartDate();
 
-        return startDate.plusDays(day + 10);
+        return startDate.plusDays(day + GameDateSetting.OFFSET_DAY.getNumberValue());
     }
 
     private List<MarketPrices> getMarketPricesUntilToday(Stock stock, LocalDate startDate, LocalDate today) {
         List<MarketPrices> marketPrices = new ArrayList<>();
 
-        for (LocalDate date = startDate; !date.isAfter(today); date = date.plusDays(1)) {
+        for (LocalDate date = startDate; !date.isAfter(today);
+            date = date.plusDays(DateOffset.NEXT_DAY.getDays())) {
             CurrentPrice currentPrice = getCurrentPriceByStockAndDate(stock, date);
             marketPrices.add(MarketPrices.create(currentPrice.getMarketPrice()));
         }
@@ -304,27 +314,28 @@ public class StockService {
     private double getAveragePrice(Stock stock, User user) {
         int transactionCount = 0;
         double totalAmount = 0;
+
         List<Transaction> transactions = transactionRepository.findByStockAndUser(stock, user);
         for (Transaction transaction : transactions) {
-            if (transaction.getType().equals(TransactionType.매수)) {
+            if (transaction.getType().equals(TransactionType.BUY)) {
                 totalAmount += transaction.getTotalAmount();
-                transactionCount += 1;
+                transactionCount += ONE_TRANSACTION;
             }
         }
 
-        return totalAmount/transactionCount;
+        return totalAmount / transactionCount;
     }
 
     private Stock getStockByStockId(Long stockId) {
 
         return stockRepository.findById(stockId)
-            .orElseThrow(() -> new IllegalArgumentException("해당 id의 stock을 찾을 수 없습니다."));
+            .orElseThrow(() -> new StockException(ErrorCode.STOCK_NOT_FOUND));
     }
 
     private GameDate getGameDateByUser(User user) {
 
         return gameDateRepository.findByUser(user)
-            .orElseThrow(() -> new IllegalArgumentException("해당 user의 GameDate를 찾을 수 없습니다."));
+            .orElseThrow(() -> new StockException(ErrorCode.GAME_DATE_NOT_FOUND));
     }
 
     private Possession getPossessionByStockAndUser(Stock stock, User user) {
@@ -336,32 +347,32 @@ public class StockService {
     private CurrentPrice getCurrentPriceByStockAndDate(Stock stock, LocalDate date) {
 
         return currentPriceRepository.findByStockAndDate(stock, date)
-            .orElseThrow(() -> new IllegalArgumentException("해당 날짜의 주식 가격을 찾을 수 없습니다."));
+            .orElseThrow(() -> new StockException(ErrorCode.PRICE_NOT_FOUND));
     }
 
     private News getNewsByStockAndDate(Stock stock, LocalDate date) {
         return newsRepository.findByStockAndDate(stock, date)
-            .orElseThrow(() -> new IllegalArgumentException("해당 날짜의 주식 뉴스를 찾을 수 없습니다."));
+            .orElseThrow(() -> new StockException(ErrorCode.NEWS_NOT_FOUND));
     }
 
     private CompanyFinance getCompanyFinanceByStockAndDate(Stock stock, LocalDate date) {
         return companyFinanceRepository.findByStockAndDate(stock, date)
-            .orElseThrow(() -> new IllegalArgumentException("해당 날짜의 주식 재무제표를 찾을 수 없습니다."));
+            .orElseThrow(() -> new StockException(ErrorCode.COMPANY_FINANCE_NOT_FOUND));
     }
 
     private MacroIndicators getMacroIndicatorsByStockAndDate(LocalDate date) {
         return macroIndicatorsRepository.findByDate(date)
-            .orElseThrow(() -> new IllegalArgumentException("해당 날짜의 거시경제를 찾을 수 없습니다."));
+            .orElseThrow(() -> new StockException(ErrorCode.MACRO_INDICATORS_NOT_FOUND));
     }
 
     private Reddit getRedditByStockAndDate(Stock stock, LocalDate date) {
         return redditRepository.findByStockAndDate(stock, date)
-            .orElseThrow(() -> new IllegalArgumentException("해당 날짜의 주식 Reddit을 찾을 수 없습니다."));
+            .orElseThrow(() -> new StockException(ErrorCode.REDDIT_NOT_FOUND));
     }
 
     private TotalAnalysis getTotalAnalysisByStockAndDate(Stock stock, LocalDate date) {
         return totalAnalysisRepository.findByStockAndDate(stock, date)
-            .orElseThrow(() -> new IllegalArgumentException("해당 날짜의 주식 종합분석을 찾을 수 없습니다."));
+            .orElseThrow(() -> new StockException(ErrorCode.TOTAL_ANALYSIS_NOT_FOUND));
     }
 
     private List<Possession> getPossessionByUser(User user) {

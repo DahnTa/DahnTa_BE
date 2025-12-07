@@ -1,7 +1,9 @@
 package com.DahnTa.service;
 
+import com.DahnTa.entity.Enum.ErrorCode;
 import com.DahnTa.entity.RefreshToken;
 import com.DahnTa.entity.User;
+import com.DahnTa.exception.RefreshTokenException;
 import com.DahnTa.repository.RefreshTokenRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,7 +29,7 @@ public class RefreshTokenService {
     public String getToken(User user) {
         return refreshTokenRepository.findByUser(user)
             .map(RefreshToken::getRefreshToken)
-            .orElse(null);
+            .orElseThrow(() -> new RefreshTokenException(ErrorCode.REFRESH_TOKEN_NOT_FOUND));
     }
 }
 

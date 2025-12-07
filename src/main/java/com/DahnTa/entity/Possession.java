@@ -1,5 +1,7 @@
 package com.DahnTa.entity;
 
+import com.DahnTa.entity.Enum.ErrorCode;
+import com.DahnTa.exception.StockException;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -64,7 +66,7 @@ public class Possession {
 
     public void validateSellQuantity(int sellQuantity) {
         if (this.quantity < sellQuantity) {
-            throw new IllegalArgumentException("보유 수량보다 많이 팔 수 없습니다.");
+            throw new StockException(ErrorCode.INSUFFICIENT_HOLDINGS);
         }
     }
 }
