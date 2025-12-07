@@ -6,15 +6,12 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.LocalDate;
-import lombok.Builder;
 import lombok.Getter;
 
 @Entity
-@Table(name = "MACRO_INDICATORS_TB")
+@Table(name = "macro_indicators_tb")
 @Getter
 public class MacroIndicators {
 
@@ -41,13 +38,8 @@ public class MacroIndicators {
         this.userId = userId;
     }
 
-    @Builder
     public static MacroIndicators create(LocalDate date, String content, Long userId) {
 
-        return MacroIndicators.builder()
-            .date(date)
-            .content(content)
-            .userId(userId)
-            .build();
+        return new MacroIndicators(date, content, userId);
     }
 }

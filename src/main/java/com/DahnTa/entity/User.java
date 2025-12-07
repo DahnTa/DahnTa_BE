@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Entity
-@Table(name = "USER_TB")
+@Table(name = "user_tb")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 
 @Getter
@@ -74,5 +74,8 @@ public class User {
 
     public void encodePassword(PasswordEncoder passwordEncoder) {
         this.userPassword = passwordEncoder.encode(this.userPassword);
+    }
+
+    public void setId(long userId) {    // test 코드용 메서드
     }
 }

@@ -10,11 +10,10 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.LocalDate;
-import lombok.Builder;
 import lombok.Getter;
 
 @Entity
-@Table(name = "TOTAL_ANALYSIS_TB")
+@Table(name = "total_analysis_tb")
 @Getter
 public class TotalAnalysis {
 
@@ -33,7 +32,7 @@ public class TotalAnalysis {
     @Column(name = "company_name", nullable = false)
     private String companyName;
 
-    @Column(name = "analyze", nullable = false)
+    @Column(name = "`analyze`", nullable = false)
     private String analyze;
 
     @Column(name = "user_id", nullable = false)
@@ -50,16 +49,9 @@ public class TotalAnalysis {
         this.userId = userId;
     }
 
-    @Builder
     public static TotalAnalysis create(Stock stock, LocalDate date, String companyName, String analyze,
         Long userId) {
 
-        return TotalAnalysis.builder()
-            .stock(stock)
-            .date(date)
-            .companyName(companyName)
-            .analyze(analyze)
-            .userId(userId)
-            .build();
+        return new TotalAnalysis(stock, date, companyName, analyze, userId);
     }
 }

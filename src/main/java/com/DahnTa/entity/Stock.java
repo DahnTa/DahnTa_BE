@@ -9,7 +9,7 @@ import jakarta.persistence.Table;
 import lombok.Getter;
 
 @Entity
-@Table(name = "STOCK_TB")
+@Table(name = "stock_tb")
 @Getter
 public class Stock {
 
@@ -22,4 +22,16 @@ public class Stock {
 
     @Column(name = "stock_tag", nullable = false)
     private String stockTag;
+
+    protected Stock() {}
+
+    private Stock(String stockName, String stockTag) {
+        this.stockName = stockName;
+        this.stockTag = stockTag;
+    }
+
+    public static Stock create(String stockName, String stockTag) {
+
+        return new Stock(stockName, stockTag);
+    }
 }

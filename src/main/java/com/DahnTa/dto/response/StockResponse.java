@@ -11,12 +11,6 @@ public record StockResponse(String stockName, String stockTag, List<MarketPrices
     public static StockResponse create(String stockName, String stockTag, List<MarketPrices> marketPrices,
         double currentPrice, double changeRate) {
 
-        return StockResponse.builder()
-            .stockName(stockName)
-            .stockTag(stockTag)
-            .marketPrices(marketPrices)
-            .currentPrice(currentPrice)
-            .changeRate(changeRate)
-            .build();
+        return new StockResponse(stockName, stockTag, marketPrices, currentPrice, changeRate);
     }
 }

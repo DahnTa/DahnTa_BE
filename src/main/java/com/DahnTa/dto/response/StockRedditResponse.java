@@ -8,11 +8,6 @@ public record StockRedditResponse(LocalDate date, String content, int score, int
 
     public static StockRedditResponse create(LocalDate date, String content, int score, int numComment) {
 
-        return StockRedditResponse.builder()
-            .date(date)
-            .content(content)
-            .score(score)
-            .numComment(numComment)
-            .build();
+        return new StockRedditResponse(date, content, score, numComment);
     }
 }

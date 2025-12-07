@@ -10,11 +10,10 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.LocalDate;
-import lombok.Builder;
 import lombok.Getter;
 
 @Entity
-@Table(name = "NEWS_TB")
+@Table(name = "news_tb")
 @Getter
 public class News {
 
@@ -46,14 +45,8 @@ public class News {
         this.userId = userId;
     }
 
-    @Builder
     public static News create(Stock stock, LocalDate date, String content, Long userId) {
 
-        return News.builder()
-            .stock(stock)
-            .date(date)
-            .content(content)
-            .userId(userId)
-            .build();
+        return new News(stock, date, content, userId);
     }
 }

@@ -10,11 +10,10 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.LocalDate;
-import lombok.Builder;
 import lombok.Getter;
 
 @Entity
-@Table(name = "GAME_DATE_TB")
+@Table(name = "game_date_tb")
 @Getter
 public class GameDate {
 
@@ -41,7 +40,6 @@ public class GameDate {
 
     protected GameDate() {}
 
-    @Builder
     private GameDate(User user, LocalDate startDate, LocalDate endDate, int day) {
         this.user = user;
         this.startDate = startDate;
@@ -51,12 +49,7 @@ public class GameDate {
 
     public static GameDate create(User user, LocalDate startDate, LocalDate endDate, int day) {
 
-        return GameDate.builder()
-            .user(user)
-            .startDate(startDate)
-            .endDate(endDate)
-            .day(day)
-            .build();
+        return new GameDate(user, startDate, endDate, day);
     }
 
     public void updateDay() {
