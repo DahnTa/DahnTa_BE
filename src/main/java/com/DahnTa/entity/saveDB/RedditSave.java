@@ -1,4 +1,4 @@
-package com.DahnTa.entity;
+package com.DahnTa.entity.saveDB;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.Column;
@@ -10,39 +10,36 @@ import jakarta.persistence.Table;
 import java.time.LocalDate;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "macro_indicators_tb")
+@Table(name = "reddit_save_db")
 @Getter
+@NoArgsConstructor
 @AllArgsConstructor
-public class MacroIndicators {
+public class RedditSave {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "stock_id", nullable = false)
+    private Long stockId;
+
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     @Column(name = "date", nullable = false)
     private LocalDate date;
 
+    @Column(name = "title", nullable = false)
+    private String title;
+
     @Column(name = "content", nullable = false, columnDefinition = "MEDIUMTEXT")
     private String content;
 
-    @Column(name = "user_id", nullable = false)
-    private Long userId;
+    @Column(name = "score", nullable = false)
+    private int score;
 
-    protected MacroIndicators() {
-    }
-
-    private MacroIndicators(LocalDate date, String content, Long userId) {
-        this.date = date;
-        this.content = content;
-        this.userId = userId;
-    }
-
-    public static MacroIndicators create(LocalDate date, String content, Long userId) {
-
-        return new MacroIndicators(date, content, userId);
-    }
+    @Column(name = "num_comment", nullable = false)
+    private int numComment;
 }

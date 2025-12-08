@@ -28,10 +28,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
         FilterChain filterChain) throws ServletException, IOException {
-        String header = request.getHeader(JwtConstants.AUTH_HEADER.getHeaderName());
+        String header = request.getHeader(JwtConstants.AUTH_HEADER.getValue());
 
-        if (header != null && header.startsWith(JwtConstants.TOKEN_PREFIX.getPrefix())) {
-            String token = header.substring(JwtConstants.TOKEN_PREFIX_LENGTH.getLength());
+        if (header != null && header.startsWith(JwtConstants.TOKEN_PREFIX.getValue())) {
+            String token = header.substring(Integer.parseInt(JwtConstants.TOKEN_PREFIX_LENGTH.getValue()));
             if (jwtTokenProvider.validateToken(token)) {
                 Long userId = jwtTokenProvider.extractUserId(token);
                 var userDetails = customUserDetailsService.loadUserById(userId);

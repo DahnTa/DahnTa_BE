@@ -15,10 +15,11 @@ import com.DahnTa.entity.Possession;
 import com.DahnTa.entity.Stock;
 import com.DahnTa.entity.Transaction;
 import com.DahnTa.entity.User;
+import com.DahnTa.entity.saveDB.CurrentPriceSave;
 import com.DahnTa.exception.UserStockException;
-import com.DahnTa.repository.CurrentPriceRepository;
 import com.DahnTa.repository.InterestRepository;
 import com.DahnTa.repository.PossessionRepository;
+import com.DahnTa.repository.SaveDBRepository.CurrentPriceSaveRepository;
 import com.DahnTa.repository.StockRepository;
 import com.DahnTa.repository.TransactionRepository;
 import java.util.List;
@@ -34,17 +35,17 @@ public class UserStockService {
     private final StockRepository stockRepository;
     private final InterestRepository interestRepository;
     private final TransactionRepository transactionRepository;
-    private final CurrentPriceRepository currentPriceRepository;
+    private final CurrentPriceSaveRepository currentPriceSaveRepository;
     private final PossessionRepository possessionRepository;
     private final TransactionMapper transactionMapper;
 
     public UserStockService(StockRepository stockRepository, InterestRepository interestRepository,
-        TransactionRepository transactionRepository, CurrentPriceRepository currentPriceRepository,
+        TransactionRepository transactionRepository, CurrentPriceSaveRepository currentPriceSaveRepository,
         PossessionRepository possessionRepository, TransactionMapper transactionMapper) {
         this.stockRepository = stockRepository;
         this.interestRepository = interestRepository;
         this.transactionRepository = transactionRepository;
-        this.currentPriceRepository = currentPriceRepository;
+        this.currentPriceSaveRepository = currentPriceSaveRepository;
         this.possessionRepository = possessionRepository;
         this.transactionMapper = transactionMapper;
     }
@@ -54,7 +55,7 @@ public class UserStockService {
 
         List<HoldingsResponseDTO> dtoList = possessions.stream()
             .map(p -> {
-                CurrentPrice priceEntity = fetchCurrentPrice(p.getStock());
+                CurrentPriceSave priceEntity = fetchCurrentPrice(p.getStock());
 
                 double currentPrice = priceEntity.getCurrentPrice();
                 double marketPrice = priceEntity.getMarketPrice();
@@ -84,7 +85,7 @@ public class UserStockService {
 
         double stockValuation = possessions.stream()
             .mapToDouble(p -> {
-                CurrentPrice price = fetchCurrentPrice(p.getStock());
+                CurrentPriceSave price = fetchCurrentPrice(p.getStock());
                 return price.getCurrentPrice() * p.getQuantity();
             })
             .sum();
@@ -110,8 +111,8 @@ public class UserStockService {
             .map(interest -> {
                 Stock stock = interest.getStock();
 
-                List<CurrentPrice> prices =
-                    currentPriceRepository.findTop2ByStockIdOrderByDateDesc(stock.getId());
+                List<CurrentPriceSave> prices =
+                    currentPriceSaveRepository.findTop2ByStockIdOrderByDateDesc(stock.getId());
 
                 double today = prices.get(0).getCurrentPrice();
                 double changeRate = 0.0;
@@ -172,8 +173,8 @@ public class UserStockService {
     }
 
 
-    private CurrentPrice fetchCurrentPrice(Stock stock) {
-        return currentPriceRepository.findTop1ByStockIdOrderByDateDesc(stock.getId())
+    private CurrentPriceSave fetchCurrentPrice(Stock stock) {
+        return currentPriceSaveRepository.findTop1ByStockIdOrderByDateDesc(stock.getId())
             .orElseThrow(() -> new UserStockException(ErrorCode.PRICE_INFO_NOT_FOUND));
     }
 

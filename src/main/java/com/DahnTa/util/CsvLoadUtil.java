@@ -17,22 +17,34 @@ import com.DahnTa.repository.NewsRepository;
 import com.DahnTa.repository.RedditRepository;
 import com.DahnTa.repository.StockRepository;
 import com.DahnTa.repository.TotalAnalysisRepository;
-import java.io.File;
-import java.nio.file.Files;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.time.format.DateTimeFormatter;
+import java.util.Map;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 @Component
-@Transactional
 public class CsvLoadUtil {
 
-    private static final List<String> STOCK_NAMES = Arrays.asList(
-        "마이크로소프트", "메타", "버크셔 해서웨이", "브로드컴", "아마존", "알파벳", "애플", "엔비디아", "월마트", "테슬라");
+    private static final DateTimeFormatter YYYYMMDD_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd");
+    private static final DateTimeFormatter YYYY_MM_DD_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+    private static final Map<String, String> STOCK_NAMES = Map.of(
+        "microsoft", "마이크로소프트",
+        "meta", "메타",
+        "berkshire_hathaway", "버크셔 해서웨이",
+        "broadcom", "브로드컴",
+        "amazon", "아마존",
+        "alphabet", "알파벳",
+        "apple", "애플",
+        "nvidia", "엔비디아",
+        "walmart", "월마트",
+        "tesla", "테슬라"
+    );
 
     private final StockRepository stockRepository;
     private final CurrentPriceRepository currentPriceRepository;
@@ -42,10 +54,12 @@ public class CsvLoadUtil {
     private final RedditRepository redditRepository;
     private final TotalAnalysisRepository totalAnalysisRepository;
 
-    public CsvLoadUtil(StockRepository stockRepository, CurrentPriceRepository currentPriceRepository,
+    public CsvLoadUtil(StockRepository stockRepository,
+        CurrentPriceRepository currentPriceRepository,
         CompanyFinanceRepository companyFinanceRepository,
         MacroIndicatorsRepository macroIndicatorsRepository,
-        NewsRepository newsRepository, RedditRepository redditRepository,
+        NewsRepository newsRepository,
+        RedditRepository redditRepository,
         TotalAnalysisRepository totalAnalysisRepository) {
         this.stockRepository = stockRepository;
         this.currentPriceRepository = currentPriceRepository;
@@ -56,110 +70,431 @@ public class CsvLoadUtil {
         this.totalAnalysisRepository = totalAnalysisRepository;
     }
 
-    private List<String[]> readFilteredCsv(String path, LocalDate start, LocalDate end) {
+    private LocalDate parseDate(String dateStr) {
+        String cleaned = dateStr.trim().replace("\"", "").replace(" ", "");
+
         try {
-            ClassPathResource resource = new ClassPathResource(path);
-            File file = resource.getFile();
+            return LocalDate.parse(cleaned, YYYYMMDD_FORMATTER);
+        } catch (Exception e1) {
+            try {
+                return LocalDate.parse(cleaned, YYYY_MM_DD_FORMATTER);
+            } catch (Exception e2) {
+                throw new RuntimeException("날짜 파싱 실패: " + dateStr);
+            }
+        }
+    }
 
-            List<String> lines = Files.readAllLines(file.toPath());
-            lines.removeFirst();
+    @Transactional
+    public void loadCsvForCurrentPrice(User user, LocalDate start, LocalDate end) {
+        System.out.println("\n===== CurrentPrice 로드 시작 =====");
+        System.out.println("범위: " + start + " ~ " + end);
 
-            List<String[]> filtered = new ArrayList<>();
+        for (String stockName : STOCK_NAMES.keySet()) {
+            String koreanName = STOCK_NAMES.get(stockName);
+            Stock stock = getStockByName(koreanName);
+            System.out.println("\n[" + stockName + "] 로드 시작");
 
-            for (String line : lines) {
-                String[] parts = line.split(",");
-                LocalDate date = LocalDate.parse(parts[0]);
-                if (!date.isBefore(start) && !date.isAfter(end)) {
-                    filtered.add(parts);
+            try {
+                ClassPathResource resource = new ClassPathResource("csv/current_price/" + stockName + ".csv");
+
+                if (!resource.exists()) {
+                    System.out.println("파일 없음!");
+                    continue;
+                }
+
+                BufferedReader br = new BufferedReader(
+                    new InputStreamReader(resource.getInputStream()));
+
+                String line;
+                boolean first = true;
+                int count = 0;
+
+                while ((line = br.readLine()) != null) {
+                    if (first) {
+                        System.out.println("헤더: " + line);
+                        first = false;
+                        continue;
+                    }
+
+                    String[] parts = line.split("\t", -1);
+                    System.out.println("원본: " + line);
+                    System.out.println("parts 길이: " + parts.length);
+
+                    if (parts.length < 3) {
+                        System.out.println("필드 부족!");
+                        continue;
+                    }
+
+                    try {
+                        LocalDate date = parseDate(parts[0]);
+                        System.out.println("날짜: " + date + ", 범위 확인: " + (!date.isBefore(start) && !date.isAfter(end)));
+
+                        if (!date.isBefore(start) && !date.isAfter(end)) {
+                            double currentPrice = Double.parseDouble(parts[1].trim().replace("\"", ""));
+                            double marketPrice = Double.parseDouble(parts[2].trim().replace("\"", ""));
+
+                            System.out.println("저장: currentPrice=" + currentPrice + ", marketPrice=" + marketPrice);
+
+                            CurrentPrice cp = CurrentPrice.create(stock, date, currentPrice, marketPrice, user.getId());
+                            currentPriceRepository.save(cp);
+                            count++;
+                        }
+                    } catch (Exception e) {
+                        System.out.println("파싱 에러: " + e.getMessage());
+                        e.printStackTrace();
+                    }
+                }
+                br.close();
+                System.out.println("저장 완료: " + count + "개\n");
+            } catch (Exception e) {
+                System.out.println("파일 로드 에러: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+    }
+
+    @Transactional
+    public void loadCsvForNews(User user, LocalDate start, LocalDate end) {
+        System.out.println("\n===== News 로드 시작 =====");
+        System.out.println("범위: " + start + " ~ " + end);
+
+        for (String stockName : STOCK_NAMES.keySet()) {
+            Stock stock = getStockByName(STOCK_NAMES.get(stockName));
+            System.out.println("\n[" + stockName + "] 로드 시작");
+
+            try {
+                ClassPathResource resource = new ClassPathResource("csv/news/" + stockName + ".csv");
+
+                if (!resource.exists()) {
+                    System.out.println("파일 없음!");
+                    continue;
+                }
+
+                BufferedReader br = new BufferedReader(
+                    new InputStreamReader(resource.getInputStream()));
+
+                String line;
+                boolean first = true;
+                int count = 0;
+
+                while ((line = br.readLine()) != null) {
+                    if (first) {
+                        System.out.println("헤더: " + line);
+                        first = false;
+                        continue;
+                    }
+
+                    String[] parts = line.split("\t", 3);
+                    System.out.println("parts 길이: " + parts.length);
+
+                    if (parts.length < 3) {
+                        System.out.println("필드 부족!");
+                        continue;
+                    }
+
+                    try {
+                        LocalDate date = parseDate(parts[0]);
+                        System.out.println("날짜: " + date);
+
+                        if (!date.isBefore(start) && !date.isAfter(end)) {
+                            String content = parts[2].trim().replace("\"", "");
+                            System.out.println("내용 길이: " + content.length());
+
+                            newsRepository.save(
+                                News.create(stock, date, content, user.getId())
+                            );
+                            count++;
+                        }
+                    } catch (Exception e) {
+                        System.out.println("파싱 에러: " + e.getMessage());
+                    }
+                }
+                br.close();
+                System.out.println("저장 완료: " + count + "개\n");
+            } catch (Exception e) {
+                System.out.println("파일 로드 에러: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+    }
+
+    @Transactional
+    public void loadCsvForMacroIndicators(User user, LocalDate start, LocalDate end) {
+        System.out.println("\n===== MacroIndicators 로드 시작 =====");
+        System.out.println("범위: " + start + " ~ " + end);
+
+        try {
+            ClassPathResource resource = new ClassPathResource("csv/macro_indicators/MacroIndicators.csv");
+
+            if (!resource.exists()) {
+                System.out.println("파일 없음!");
+                return;
+            }
+
+            BufferedReader br = new BufferedReader(
+                new InputStreamReader(resource.getInputStream()));
+
+            String line;
+            boolean first = true;
+            int count = 0;
+
+            while ((line = br.readLine()) != null) {
+                if (first) {
+                    System.out.println("헤더: " + line);
+                    first = false;
+                    continue;
+                }
+
+                String[] parts = line.split("\t", 3);
+                System.out.println("parts 길이: " + parts.length);
+
+                if (parts.length < 3) {
+                    System.out.println("필드 부족!");
+                    continue;
+                }
+
+                try {
+                    LocalDate date = parseDate(parts[0]);
+                    System.out.println("날짜: " + date);
+
+                    if (!date.isBefore(start) && !date.isAfter(end)) {
+                        String content = parts[2].trim().replace("\"", "");
+                        System.out.println("내용 길이: " + content.length());
+
+                        macroIndicatorsRepository.save(
+                            MacroIndicators.create(date, content, user.getId())
+                        );
+                        count++;
+                    }
+                } catch (Exception e) {
+                    System.out.println("파싱 에러: " + e.getMessage());
                 }
             }
-
-            return filtered;
-
+            br.close();
+            System.out.println("저장 완료: " + count + "개\n");
         } catch (Exception e) {
-            throw new RuntimeException("CSV 로딩 실패: " + path);
+            System.out.println("파일 로드 에러: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
-    public void loadCsvForCurrentPrice(User user, LocalDate start, LocalDate end) {
-        for (String stockName : STOCK_NAMES) {
-            Stock stock = getStockByName(stockName);
-            List<String[]> rows = readFilteredCsv("csv/current_price/" + stockName + ".csv", start, end);
-
-            for (String[] data : rows) {
-                LocalDate date = LocalDate.parse(data[0]);
-                double currentPrice = Double.parseDouble(data[(int) (Math.random() * 2 + 1)]);
-                double marketPrice = Double.parseDouble(data[(int) (Math.random() * 4 + 3)]);
-                currentPriceRepository.save(
-                    CurrentPrice.create(stock, date, currentPrice, marketPrice, user.getId()));
-            }
-        }
-    }
-
-    public void loadCsvForNews(User user, LocalDate start, LocalDate end) {
-        for (String stockName : STOCK_NAMES) {
-            Stock stock = getStockByName(stockName);
-            List<String[]> rows = readFilteredCsv("csv/news/" + stockName + ".csv", start, end);
-
-            for (String[] data : rows) {
-                LocalDate date = LocalDate.parse(data[0]);
-                newsRepository.save(News.create(stock, date, data[2], user.getId()));
-            }
-        }
-    }
-
-    public void loadCsvForMacroIndicators(User user, LocalDate start, LocalDate end) {
-        List<String[]> rows = readFilteredCsv("csv/macro_indicators/거시경제_gemini_results.csv", start, end);
-
-        for (String[] data : rows) {
-            LocalDate date = LocalDate.parse(data[0]);
-            macroIndicatorsRepository.save(MacroIndicators.create(date, data[2], user.getId()));
-        }
-    }
-
+    @Transactional
     public void loadCsvForCompanyFinance(User user, LocalDate start, LocalDate end) {
-        for (String stockName : STOCK_NAMES) {
-            Stock stock = getStockByName(stockName);
-            List<String[]> rows = readFilteredCsv("csv/company_finance/" + stockName + ".csv", start, end);
+        System.out.println("\n===== CompanyFinance 로드 시작 =====");
+        System.out.println("범위: " + start + " ~ " + end);
 
-            for (String[] data : rows) {
-                LocalDate date = LocalDate.parse(data[0]);
-                companyFinanceRepository.save(
-                    CompanyFinance.create(stock, date, data[2], user.getId()));
+        for (String stockName : STOCK_NAMES.keySet()) {
+            Stock stock = getStockByName(STOCK_NAMES.get(stockName));
+            System.out.println("\n[" + stockName + "] 로드 시작");
+
+            try {
+                ClassPathResource resource = new ClassPathResource("csv/company_finance/" + stockName + ".csv");
+
+                if (!resource.exists()) {
+                    System.out.println("파일 없음!");
+                    continue;
+                }
+
+                BufferedReader br = new BufferedReader(
+                    new InputStreamReader(resource.getInputStream()));
+
+                String line;
+                boolean first = true;
+                int count = 0;
+
+                while ((line = br.readLine()) != null) {
+                    if (first) {
+                        System.out.println("헤더: " + line);
+                        first = false;
+                        continue;
+                    }
+
+                    String[] parts = line.split("\t", 3);
+                    System.out.println("parts 길이: " + parts.length);
+
+                    if (parts.length < 3) {
+                        System.out.println("필드 부족!");
+                        continue;
+                    }
+
+                    try {
+                        LocalDate date = parseDate(parts[0]);
+                        System.out.println("날짜: " + date);
+
+                        if (!date.isBefore(start) && !date.isAfter(end)) {
+                            String content = parts[2].trim().replace("\"", "");
+                            System.out.println("내용 길이: " + content.length());
+
+                            companyFinanceRepository.save(
+                                CompanyFinance.create(stock, date, content, user.getId())
+                            );
+                            count++;
+                        }
+                    } catch (Exception e) {
+                        System.out.println("파싱 에러: " + e.getMessage());
+                    }
+                }
+                br.close();
+                System.out.println("저장 완료: " + count + "개\n");
+            } catch (Exception e) {
+                System.out.println("파일 로드 에러: " + e.getMessage());
+                e.printStackTrace();
             }
         }
     }
 
-    public void loadCsvForReddit(User user, LocalDate start, LocalDate end) {
-        for (String stockName : STOCK_NAMES) {
-            Stock stock = getStockByName(stockName);
-            List<String[]> rows = readFilteredCsv("csv/reddit/" + stockName + ".csv", start, end);
-
-            for (String[] data : rows) {
-                LocalDate date = LocalDate.parse(data[0]);
-                int score = Integer.parseInt(data[2]);
-                int numComment = Integer.parseInt(data[3]);
-                redditRepository.save(
-                    Reddit.create(stock, date, data[1], score, numComment, user.getId()));
-            }
-        }
-    }
-
+    @Transactional
     public void loadCsvForTotalAnalysis(User user, LocalDate start, LocalDate end) {
-        for (String stockName : STOCK_NAMES) {
-            Stock stock = getStockByName(stockName);
-            List<String[]> rows = readFilteredCsv("csv/total_analysis/" + stockName + ".csv", start, end);
+        System.out.println("\n===== TotalAnalysis 로드 시작 =====");
+        System.out.println("범위: " + start + " ~ " + end);
 
-            for (String[] data : rows) {
-                LocalDate date = LocalDate.parse(data[0]);
-                totalAnalysisRepository.save(
-                    TotalAnalysis.create(stock, date, data[1], data[2], user.getId()));
+        for (String stockName : STOCK_NAMES.keySet()) {
+            Stock stock = getStockByName(STOCK_NAMES.get(stockName));
+            System.out.println("\n[" + stockName + "] 로드 시작");
+
+            try {
+                ClassPathResource resource = new ClassPathResource("csv/total_analysis/" + stockName + ".csv");
+
+                if (!resource.exists()) {
+                    System.out.println("파일 없음!");
+                    continue;
+                }
+
+                BufferedReader br = new BufferedReader(
+                    new InputStreamReader(resource.getInputStream()));
+
+                String line;
+                boolean first = true;
+                int count = 0;
+
+                while ((line = br.readLine()) != null) {
+                    if (first) {
+                        System.out.println("헤더: " + line);
+                        first = false;
+                        continue;
+                    }
+
+                    String[] parts = line.split("\t", 3);
+                    System.out.println("parts 길이: " + parts.length);
+
+                    if (parts.length < 3) {
+                        System.out.println("필드 부족!");
+                        continue;
+                    }
+
+                    try {
+                        LocalDate date = parseDate(parts[0]);
+                        System.out.println("날짜: " + date);
+
+                        if (!date.isBefore(start) && !date.isAfter(end)) {
+                            String title = parts[1].trim().replace("\"", "");
+                            String content = parts[2].trim().replace("\"", "");
+                            System.out.println("제목 길이: " + title.length() + ", 내용 길이: " + content.length());
+
+                            totalAnalysisRepository.save(
+                                TotalAnalysis.create(stock, date, title, content, user.getId())
+                            );
+                            count++;
+                        }
+                    } catch (Exception e) {
+                        System.out.println("파싱 에러: " + e.getMessage());
+                    }
+                }
+                br.close();
+                System.out.println("저장 완료: " + count + "개\n");
+            } catch (Exception e) {
+                System.out.println("파일 로드 에러: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+    }
+
+    @Transactional
+    public void loadCsvForReddit(User user, LocalDate start, LocalDate end) {
+        System.out.println("\n===== Reddit 로드 시작 =====");
+        System.out.println("범위: " + start + " ~ " + end);
+
+        for (String stockName : STOCK_NAMES.keySet()) {
+            Stock stock = getStockByName(STOCK_NAMES.get(stockName));
+            System.out.println("\n[" + stockName + "] 로드 시작");
+
+            try {
+                ClassPathResource resource = new ClassPathResource("csv/reddit/" + stockName + ".csv");
+
+                if (!resource.exists()) {
+                    System.out.println("파일 없음!");
+                    continue;
+                }
+
+                BufferedReader br = new BufferedReader(
+                    new InputStreamReader(resource.getInputStream()));
+
+                String line;
+                boolean first = true;
+                int count = 0;
+
+                while ((line = br.readLine()) != null) {
+                    if (first) {
+                        System.out.println("헤더: " + line);
+                        first = false;
+                        continue;
+                    }
+
+                    String[] parts = line.split("\t", -1);
+                    System.out.println("parts 길이: " + parts.length);
+
+                    if (parts.length < 5) {
+                        System.out.println("필드 부족!");
+                        continue;
+                    }
+
+                    try {
+                        LocalDate date = parseDate(parts[0]);
+                        System.out.println("날짜: " + date);
+
+                        if (!date.isBefore(start) && !date.isAfter(end)) {
+                            String title = parts[1].trim().replace("\"", "");
+                            String selftext = parts[2].trim().replace("\"", "");
+
+                            int score = 0;
+                            if (!parts[3].trim().isEmpty() && !parts[3].trim().equals("score")) {
+                                try {
+                                    score = Integer.parseInt(parts[3].trim().replace("\"", ""));
+                                } catch (Exception e) {
+                                    score = 0;
+                                }
+                            }
+
+                            int numComments = 0;
+                            if (!parts[4].trim().isEmpty() && !parts[4].trim().equals("num_comments")) {
+                                try {
+                                    numComments = Integer.parseInt(parts[4].trim().replace("\"", ""));
+                                } catch (Exception e) {
+                                    numComments = 0;
+                                }
+                            }
+
+                            System.out.println("제목: " + title + ", score: " + score + ", numComments: " + numComments);
+
+                            redditRepository.save(
+                                Reddit.create(stock, date, title, selftext, score, numComments, user.getId())
+                            );
+                            count++;
+                        }
+                    } catch (Exception e) {
+                        System.out.println("파싱 에러: " + e.getMessage());
+                    }
+                }
+                br.close();
+                System.out.println("저장 완료: " + count + "개\n");
+            } catch (Exception e) {
+                System.out.println("파일 로드 에러: " + e.getMessage());
+                e.printStackTrace();
             }
         }
     }
 
     private Stock getStockByName(String stockName) {
-
         return stockRepository.findByStockName(stockName)
             .orElseThrow(() -> new StockException(ErrorCode.STOCK_NOT_FOUND));
     }

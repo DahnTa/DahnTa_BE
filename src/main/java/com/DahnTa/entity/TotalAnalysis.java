@@ -10,11 +10,14 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.LocalDate;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.Setter;
 
 @Entity
 @Table(name = "total_analysis_tb")
 @Getter
+@AllArgsConstructor
 public class TotalAnalysis {
 
     @Id
@@ -32,7 +35,7 @@ public class TotalAnalysis {
     @Column(name = "company_name", nullable = false)
     private String companyName;
 
-    @Column(name = "`analyze`", nullable = false)
+    @Column(name = "`analyze`", nullable = false, columnDefinition = "MEDIUMTEXT")
     private String analyze;
 
     @Column(name = "user_id", nullable = false)

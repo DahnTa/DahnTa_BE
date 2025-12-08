@@ -10,11 +10,14 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.LocalDate;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.Setter;
 
 @Entity
 @Table(name = "reddit_tb")
 @Getter
+@AllArgsConstructor
 public class Reddit {
 
     @Id
@@ -29,7 +32,10 @@ public class Reddit {
     @Column(name = "date", nullable = false)
     private LocalDate date;
 
-    @Column(name = "content", nullable = false)
+    @Column(name = "title", nullable = false)
+    private String title;
+
+    @Column(name = "content", nullable = false, columnDefinition = "MEDIUMTEXT")
     private String content;
 
     @Column(name = "score", nullable = false)
@@ -44,18 +50,19 @@ public class Reddit {
     protected Reddit() {
     }
 
-    private Reddit(Stock stock, LocalDate date, String content, int score, int numComment, Long userId) {
+    private Reddit(Stock stock, LocalDate date, String title, String content, int score, int numComment, Long userId) {
         this.stock = stock;
         this.date = date;
+        this.title = title;
         this.content = content;
         this.score = score;
         this.numComment = numComment;
         this.userId = userId;
     }
 
-    public static Reddit create(Stock stock, LocalDate date, String content, int score, int numComment,
+    public static Reddit create(Stock stock, LocalDate date, String title, String content, int score, int numComment,
         Long userId) {
 
-        return new Reddit(stock, date, content, score, numComment, userId);
+        return new Reddit(stock, date, title, content, score, numComment, userId);
     }
 }

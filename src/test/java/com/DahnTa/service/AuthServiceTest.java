@@ -55,7 +55,7 @@ class AuthServiceTest {
     @Test
     @DisplayName("회원가입 실패 - 이미 존재하는 계정")
     void signupUser_Fail_AccountAlreadyExists() {
-        SignUpRequestDTO dto = new SignUpRequestDTO(1L, "test", "pass", "nick", "url");
+        SignUpRequestDTO dto = new SignUpRequestDTO( "test", "pass", "nick", "url");
         when(userRepository.existsByUserAccount("test")).thenReturn(true);
 
         assertThatThrownBy(() -> authService.signupUser(dto))
@@ -71,7 +71,7 @@ class AuthServiceTest {
     @Test
     @DisplayName("회원가입 성공")
     void signupUser_Success() {
-        SignUpRequestDTO dto = new SignUpRequestDTO(1L, "newUser", "pass", "nick", "url");
+        SignUpRequestDTO dto = new SignUpRequestDTO( "newUser", "pass", "nick", "url");
         User userEntity = new User("newUser", "pass", "nick", 0, null);
 
         when(userRepository.existsByUserAccount("newUser")).thenReturn(false);
