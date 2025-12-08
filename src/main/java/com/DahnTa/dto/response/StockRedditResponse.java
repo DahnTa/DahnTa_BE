@@ -1,0 +1,12 @@
+package com.DahnTa.dto.response;
+
+import java.time.LocalDate;
+import lombok.Builder;
+
+public record StockRedditResponse(LocalDate date, String content, int score, int numComment) {
+
+    public static StockRedditResponse create(LocalDate date, String content, int score, int numComment) {
+
+        return new StockRedditResponse(date, content, score, numComment);
+    }
+}
