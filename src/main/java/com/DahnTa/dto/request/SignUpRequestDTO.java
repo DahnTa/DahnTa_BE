@@ -3,8 +3,6 @@ package com.DahnTa.dto.request;
 import jakarta.validation.constraints.NotBlank;
 
 public class SignUpRequestDTO {
-    private Long id;
-
     @NotBlank
     private String userAccount;
 
@@ -20,17 +18,12 @@ public class SignUpRequestDTO {
 
 
     // 기본 생성자
-    public SignUpRequestDTO(Long id, String userAccount, String userPassword,
+    public SignUpRequestDTO(String userAccount, String userPassword,
         String userNickName, String userProfileImageUrl) {
-        this.id = id;
         this.userAccount = userAccount;
         this.userPassword = userPassword;
         this.userNickName = userNickName;
         this.userProfileImageUrl = userProfileImageUrl;
-    }
-
-    public Long getId() {
-        return id;
     }
 
     public String getUserAccount() {
@@ -50,10 +43,6 @@ public class SignUpRequestDTO {
     }
 
 
-    public void setId(Long id) {
-        this.id = id;
-    }
-
     public void setUserAccount(String userAccount) {
         this.userAccount = userAccount;
     }
@@ -69,8 +58,4 @@ public class SignUpRequestDTO {
     public void setUserProfileImageUrl(String userProfileImageUrl) {
         this.userProfileImageUrl = userProfileImageUrl;
     }
-
-
-
-
 }

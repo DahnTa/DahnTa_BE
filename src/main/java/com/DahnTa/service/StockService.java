@@ -28,6 +28,12 @@ import com.DahnTa.entity.Stock;
 import com.DahnTa.entity.TotalAnalysis;
 import com.DahnTa.entity.Transaction;
 import com.DahnTa.entity.User;
+import com.DahnTa.entity.saveDB.CompanyFinanceSave;
+import com.DahnTa.entity.saveDB.CurrentPriceSave;
+import com.DahnTa.entity.saveDB.MacroIndicatorsSave;
+import com.DahnTa.entity.saveDB.NewsSave;
+import com.DahnTa.entity.saveDB.RedditSave;
+import com.DahnTa.entity.saveDB.TotalAnalysisSave;
 import com.DahnTa.exception.StockException;
 import com.DahnTa.repository.CompanyFinanceRepository;
 import com.DahnTa.repository.CurrentPriceRepository;
@@ -36,17 +42,25 @@ import com.DahnTa.repository.MacroIndicatorsRepository;
 import com.DahnTa.repository.NewsRepository;
 import com.DahnTa.repository.PossessionRepository;
 import com.DahnTa.repository.RedditRepository;
+import com.DahnTa.repository.SaveDBRepository.CompanyFinanceSaveRepository;
+import com.DahnTa.repository.SaveDBRepository.CurrentPriceSaveRepository;
+import com.DahnTa.repository.SaveDBRepository.MacroIndicatorsSaveRepository;
+import com.DahnTa.repository.SaveDBRepository.NewsSaveRepository;
+import com.DahnTa.repository.SaveDBRepository.RedditSaveRepository;
+import com.DahnTa.repository.SaveDBRepository.TotalAnalysisSaveRepository;
 import com.DahnTa.repository.StockRepository;
 import com.DahnTa.repository.TotalAnalysisRepository;
 import com.DahnTa.repository.TransactionRepository;
 import com.DahnTa.util.CsvLoadUtil;
 import com.DahnTa.util.RemoveGameDataUtil;
+import com.DahnTa.util.SaveDBLoadUtil;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
@@ -66,8 +80,14 @@ public class StockService {
     private final RedditRepository redditRepository;
     private final TotalAnalysisRepository totalAnalysisRepository;
     private final TransactionRepository transactionRepository;
-    private final CsvLoadUtil csvLoadUtil;
+    private final SaveDBLoadUtil saveDBLoadUtil;
     private final RemoveGameDataUtil removeGameDataUtil;
+    private final CurrentPriceSaveRepository currentPriceSaveRepository;
+    private final CompanyFinanceSaveRepository companyFinanceSaveRepository;
+    private final MacroIndicatorsSaveRepository macroIndicatorsSaveRepository;
+    private final NewsSaveRepository newsSaveRepository;
+    private final RedditSaveRepository redditSaveRepository;
+    private final TotalAnalysisSaveRepository totalAnalysisSaveRepository;
 
     public StockService(GameDateRepository gameDateRepository, StockRepository stockRepository,
         PossessionRepository possessionRepository, CurrentPriceRepository currentPriceRepository,
@@ -75,7 +95,14 @@ public class StockService {
         MacroIndicatorsRepository macroIndicatorsRepository, NewsRepository newsRepository,
         RedditRepository redditRepository, TotalAnalysisRepository totalAnalysisRepository,
         TransactionRepository transactionRepository,
-        CsvLoadUtil csvLoadUtil, RemoveGameDataUtil removeGameDataUtil) {
+        SaveDBLoadUtil saveDBLoadUtil, RemoveGameDataUtil removeGameDataUtil,
+
+        CurrentPriceSaveRepository currentPriceSaveRepository,
+        CompanyFinanceSaveRepository companyFinanceSaveRepository,
+        MacroIndicatorsSaveRepository macroIndicatorsSaveRepository,
+        NewsSaveRepository newsSaveRepository,
+        RedditSaveRepository redditSaveRepository,
+        TotalAnalysisSaveRepository totalAnalysisSaveRepository) {
         this.gameDateRepository = gameDateRepository;
         this.stockRepository = stockRepository;
         this.possessionRepository = possessionRepository;
@@ -86,27 +113,31 @@ public class StockService {
         this.redditRepository = redditRepository;
         this.totalAnalysisRepository = totalAnalysisRepository;
         this.transactionRepository = transactionRepository;
-        this.csvLoadUtil = csvLoadUtil;
+        this.saveDBLoadUtil = saveDBLoadUtil;
         this.removeGameDataUtil = removeGameDataUtil;
+
+        this.currentPriceSaveRepository = currentPriceSaveRepository;
+        this.companyFinanceSaveRepository = companyFinanceSaveRepository;
+        this.macroIndicatorsSaveRepository = macroIndicatorsSaveRepository;
+        this.newsSaveRepository = newsSaveRepository;
+        this.redditSaveRepository = redditSaveRepository;
+        this.totalAnalysisSaveRepository = totalAnalysisSaveRepository;
     }
 
     public void gameStart(User user) {
         LocalDate start = GameDateSetting.START.getDateValue();
         LocalDate end = GameDateSetting.END.getDateValue();
-        LocalDate lastestStart = end.minusDays(GameDateSetting.DAYS_TO_SUBTRACT.getNumberValue());
+        int dayDuration = GameDateSetting.DAY_DURATION.getNumberValue();
 
-        long days = ChronoUnit.DAYS.between(start, lastestStart);
-        long randomOffset = ThreadLocalRandom.current()
-            .nextLong(0, days + GameDateSetting.START_DAY.getNumberValue());
+        long maxOffset = ChronoUnit.DAYS.between(start, end) - dayDuration;
+        long randomOffset = ThreadLocalRandom.current().nextLong(0, maxOffset + 1);
 
         LocalDate randomStart = start.plusDays(randomOffset);
-        LocalDate randomEnd = randomStart.plusDays(GameDateSetting.DAY_DURATION.getNumberValue());
+        LocalDate randomEnd = randomStart.plusDays(dayDuration - 1);
 
         GameDate gameDate = GameDate.create(user, randomStart, randomEnd,
             GameDateSetting.START_DAY.getNumberValue());
         gameDateRepository.save(gameDate);
-
-        setGameDataByUser(user, randomStart, randomEnd);
     }
 
     public void gameDateNext(User user) {
@@ -121,7 +152,7 @@ public class StockService {
     public void stockBuy(User user, Long stockId, StockBuyRequest request) {
         Stock stock = getStockByStockId(stockId);
         LocalDate today = getToday(user);
-        CurrentPrice currentPrice = getCurrentPriceByStockAndDate(stock, today);
+        CurrentPriceSave currentPrice = getCurrentPriceByStockAndDate(stock, today);
 
         currentPrice.validateBuyQuantity(user.getUserCredit(), request.getQuantity());
 
@@ -149,7 +180,7 @@ public class StockService {
             possessionRepository.delete(possession);
         }
 
-        CurrentPrice currentPrice = getCurrentPriceByStockAndDate(stock, today);
+        CurrentPriceSave currentPrice = getCurrentPriceByStockAndDate(stock, today);
         user.increaseCredit(currentPrice.getCurrentPrice() * request.getQuantity());
     }
 
@@ -159,7 +190,7 @@ public class StockService {
 
         List<DashBoard> dashBoards = new ArrayList<>();
         for (Stock stock : stocks) {
-            CurrentPrice currentPrice = getCurrentPriceByStockAndDate(stock, today);
+            CurrentPriceSave currentPrice = getCurrentPriceByStockAndDate(stock, today);
             DashBoard board = DashBoard.create(stock.getId(), stock.getStockName(), stock.getStockTag(),
                 currentPrice.getCurrentPrice(), currentPrice.getMarketPrice(),
                 getChangeRate(stock, currentPrice, today), getChangeAmount(stock, currentPrice, today));
@@ -171,8 +202,10 @@ public class StockService {
 
     public StockResponse getStock(User user, Long stockId) {
         Stock stock = getStockByStockId(stockId);
+        System.out.println("stockId:" + stock.getId());
         LocalDate today = getToday(user);
-        CurrentPrice currentPrice = getCurrentPriceByStockAndDate(stock, today);
+        System.out.println("today:" + today);
+        CurrentPriceSave currentPrice = getCurrentPriceByStockAndDate(stock, today);
         GameDate gameDate = getGameDateByUser(user);
         List<MarketPrices> marketPrices = getMarketPricesUntilToday(stock, gameDate.getStartDate(), today);
 
@@ -189,7 +222,7 @@ public class StockService {
         }
 
         LocalDate today = getToday(user);
-        CurrentPrice currentPrice = getCurrentPriceByStockAndDate(stock, today);
+        CurrentPriceSave currentPrice = getCurrentPriceByStockAndDate(stock, today);
         double averagePrice = getAveragePrice(stock, user);
 
         return StockOrderResponse.create(quantity, averagePrice,
@@ -200,7 +233,7 @@ public class StockService {
         Stock stock = getStockByStockId(stockId);
         LocalDate today = getToday(user);
 
-        News news = getNewsByStockAndDate(stock, today);
+        NewsSave news = getNewsByStockAndDate(stock, today);
 
         return StockNewsResponse.create(news.getDate(), news.getContent());
     }
@@ -209,7 +242,7 @@ public class StockService {
         Stock stock = getStockByStockId(stockId);
         LocalDate today = getToday(user);
 
-        CompanyFinance companyFinance = getCompanyFinanceByStockAndDate(stock, today);
+        CompanyFinanceSave companyFinance = getCompanyFinanceByStockAndDate(stock, today);
 
         return StockCompanyFinanceResponse.create(companyFinance.getDate(), companyFinance.getContent());
     }
@@ -217,7 +250,7 @@ public class StockService {
     public MacroIndicatorsResponse getMacroIndicators(User user) {
         LocalDate today = getToday(user);
 
-        MacroIndicators macroIndicators = getMacroIndicatorsByStockAndDate(today);
+        MacroIndicatorsSave macroIndicators = getMacroIndicatorsByStockAndDate(today);
 
         return MacroIndicatorsResponse.create(macroIndicators.getDate(), macroIndicators.getContent());
     }
@@ -226,7 +259,7 @@ public class StockService {
         Stock stock = getStockByStockId(stockId);
         LocalDate today = getToday(user);
 
-        Reddit reddit = getRedditByStockAndDate(stock, today);
+        RedditSave reddit = getRedditByStockAndDate(stock, today);
 
         return StockRedditResponse.create(reddit.getDate(), reddit.getContent(), reddit.getScore(),
             reddit.getNumComment());
@@ -236,7 +269,7 @@ public class StockService {
         Stock stock = getStockByStockId(stockId);
         LocalDate today = getToday(user);
 
-        TotalAnalysis totalAnalysis = getTotalAnalysisByStockAndDate(stock, today);
+        TotalAnalysisSave totalAnalysis = getTotalAnalysisByStockAndDate(stock, today);
 
         return StockTotalAnalysisResponse.create(totalAnalysis.getDate(), totalAnalysis.getCompanyName(),
             totalAnalysis.getAnalyze());
@@ -247,7 +280,7 @@ public class StockService {
         List<Possession> possessions = getPossessionByUser(user);
         LocalDate today = getToday(user);
         for (Possession possession : possessions) {
-            CurrentPrice currentPrice = getCurrentPriceByStockAndDate(possession.getStock(), today);
+            CurrentPriceSave currentPrice = getCurrentPriceByStockAndDate(possession.getStock(), today);
             totalReturnRate += possession.calculateAmount(currentPrice.getCurrentPrice());
         }
 
@@ -258,35 +291,37 @@ public class StockService {
     }
 
     private void setGameDataByUser(User user, LocalDate randomStart, LocalDate randomEnd) {
-        csvLoadUtil.loadCsvForCurrentPrice(user, randomStart, randomEnd);
-        csvLoadUtil.loadCsvForNews(user, randomStart, randomEnd);
-        csvLoadUtil.loadCsvForMacroIndicators(user, randomStart, randomEnd);
-        csvLoadUtil.loadCsvForCompanyFinance(user, randomStart, randomEnd);
-        csvLoadUtil.loadCsvForReddit(user, randomStart, randomEnd);
-        csvLoadUtil.loadCsvForTotalAnalysis(user, randomStart, randomEnd);
+        saveDBLoadUtil.loadSaveDBForCurrentPrice(user, randomStart, randomEnd);
+        saveDBLoadUtil.loadSaveDBForNews(user, randomStart, randomEnd);
+        saveDBLoadUtil.loadSaveDBForMacroIndicators(user, randomStart, randomEnd);
+        saveDBLoadUtil.loadSaveDBForCompanyFinance(user, randomStart, randomEnd);
+        saveDBLoadUtil.loadSaveDBForTotalAnalysis(user, randomStart, randomEnd);
+        saveDBLoadUtil.loadSaveDBForReddit(user, randomStart, randomEnd);
     }
 
     private void removeGameDataByUser(User user) {
+        removeGameDataUtil.gameDateRemoveByTransaction(user);
+        removeGameDataUtil.gameDateRemoveByInterest(user);
+        removeGameDataUtil.gameDataRemoveByPossession(user);
+
         removeGameDataUtil.gameDataRemoveByCurrentPrice(user);
         removeGameDataUtil.gameDataRemoveByCompanyFinance(user);
         removeGameDataUtil.gameDataRemoveByMacroIndicators(user);
         removeGameDataUtil.gameDataRemoveByNews(user);
         removeGameDataUtil.gameDataRemoveByReddit(user);
         removeGameDataUtil.gameDataRemoveByTotalAnalysis(user);
-        removeGameDataUtil.gameDataRemoveByPossession(user);
+
         removeGameDataUtil.gameDataRemoveByGameDate(user);
-        removeGameDataUtil.gameDateRemoveByInterest(user);
-        removeGameDataUtil.gameDateRemoveByTransaction(user);
     }
 
-    private double getChangeRate(Stock stock, CurrentPrice currentPrice, LocalDate date) {
-        CurrentPrice yesterdayPrice = getCurrentPriceByStockAndDate(stock, date.minusDays(
+    private double getChangeRate(Stock stock, CurrentPriceSave currentPrice, LocalDate date) {
+        CurrentPriceSave yesterdayPrice = getCurrentPriceByStockAndDate(stock, date.minusDays(
             DateOffset.PREVIOUS_DAY.getDays()));
         return currentPrice.calculateChangeRate(yesterdayPrice);
     }
 
-    private double getChangeAmount(Stock stock, CurrentPrice currentPrice, LocalDate date) {
-        CurrentPrice yesterdayPrice = getCurrentPriceByStockAndDate(stock,
+    private double getChangeAmount(Stock stock, CurrentPriceSave currentPrice, LocalDate date) {
+        CurrentPriceSave yesterdayPrice = getCurrentPriceByStockAndDate(stock,
             date.minusDays(DateOffset.PREVIOUS_DAY.getDays()));
         return currentPrice.calculateChangeAmount(yesterdayPrice);
     }
@@ -296,7 +331,7 @@ public class StockService {
         int day = gameDate.getDay();
         LocalDate startDate = gameDate.getStartDate();
 
-        return startDate.plusDays(day + GameDateSetting.OFFSET_DAY.getNumberValue());
+        return startDate.plusDays(day + 10);
     }
 
     private List<MarketPrices> getMarketPricesUntilToday(Stock stock, LocalDate startDate, LocalDate today) {
@@ -304,7 +339,7 @@ public class StockService {
 
         for (LocalDate date = startDate; !date.isAfter(today);
             date = date.plusDays(DateOffset.NEXT_DAY.getDays())) {
-            CurrentPrice currentPrice = getCurrentPriceByStockAndDate(stock, date);
+            CurrentPriceSave currentPrice = getCurrentPriceByStockAndDate(stock, date);
             marketPrices.add(MarketPrices.create(currentPrice.getMarketPrice()));
         }
 
@@ -344,34 +379,34 @@ public class StockService {
             .orElse(null);
     }
 
-    private CurrentPrice getCurrentPriceByStockAndDate(Stock stock, LocalDate date) {
+    private CurrentPriceSave getCurrentPriceByStockAndDate(Stock stock, LocalDate date) {
 
-        return currentPriceRepository.findByStockAndDate(stock, date)
+        return currentPriceSaveRepository.findFirstByStockIdAndDateLessThanEqualOrderByDateDesc(stock.getId(), date)
             .orElseThrow(() -> new StockException(ErrorCode.PRICE_NOT_FOUND));
     }
 
-    private News getNewsByStockAndDate(Stock stock, LocalDate date) {
-        return newsRepository.findByStockAndDate(stock, date)
+    private NewsSave getNewsByStockAndDate(Stock stock, LocalDate date) {
+        return newsSaveRepository.findByStockIdAndDate(stock.getId(), date)
             .orElseThrow(() -> new StockException(ErrorCode.NEWS_NOT_FOUND));
     }
 
-    private CompanyFinance getCompanyFinanceByStockAndDate(Stock stock, LocalDate date) {
-        return companyFinanceRepository.findByStockAndDate(stock, date)
+    private CompanyFinanceSave getCompanyFinanceByStockAndDate(Stock stock, LocalDate date) {
+        return companyFinanceSaveRepository.findByStockIdAndDate(stock.getId(), date)
             .orElseThrow(() -> new StockException(ErrorCode.COMPANY_FINANCE_NOT_FOUND));
     }
 
-    private MacroIndicators getMacroIndicatorsByStockAndDate(LocalDate date) {
-        return macroIndicatorsRepository.findByDate(date)
+    private MacroIndicatorsSave getMacroIndicatorsByStockAndDate(LocalDate date) {
+        return macroIndicatorsSaveRepository.findByDate(date)
             .orElseThrow(() -> new StockException(ErrorCode.MACRO_INDICATORS_NOT_FOUND));
     }
 
-    private Reddit getRedditByStockAndDate(Stock stock, LocalDate date) {
-        return redditRepository.findByStockAndDate(stock, date)
+    private RedditSave getRedditByStockAndDate(Stock stock, LocalDate date) {
+        return redditSaveRepository.findByStockIdAndDate(stock.getId(), date)
             .orElseThrow(() -> new StockException(ErrorCode.REDDIT_NOT_FOUND));
     }
 
-    private TotalAnalysis getTotalAnalysisByStockAndDate(Stock stock, LocalDate date) {
-        return totalAnalysisRepository.findByStockAndDate(stock, date)
+    private TotalAnalysisSave getTotalAnalysisByStockAndDate(Stock stock, LocalDate date) {
+        return totalAnalysisSaveRepository.findByStockIdAndDate(stock.getId(), date)
             .orElseThrow(() -> new StockException(ErrorCode.TOTAL_ANALYSIS_NOT_FOUND));
     }
 

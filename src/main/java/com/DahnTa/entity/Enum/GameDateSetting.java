@@ -8,7 +8,7 @@ public enum GameDateSetting {
 
     START(LocalDate.of(2024, 10, 1)),
     END(LocalDate.of(2025, 10, 1)),
-    DAY_DURATION(19),
+    DAY_DURATION(30),
     OFFSET_DAY(10),
     DAYS_TO_SUBTRACT(29),
     START_DAY(1);

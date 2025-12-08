@@ -10,6 +10,7 @@ import com.DahnTa.entity.User;
 import com.DahnTa.exception.AuthException;
 import com.DahnTa.jwt.JwtTokenProvider;
 import com.DahnTa.repository.UserRepository;
+import com.DahnTa.util.RemoveGameDataUtil;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,15 +23,17 @@ public class AuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final RefreshTokenService refreshTokenService;
     private final PasswordEncoder passwordEncoder;
+    private final RemoveGameDataUtil removeGameDataUtil;
 
     public AuthService(UserRepository userRepository, UserMapper userMapper,
         JwtTokenProvider jwtTokenProvider, RefreshTokenService refreshTokenService,
-        PasswordEncoder passwordEncoder) {
+        PasswordEncoder passwordEncoder, RemoveGameDataUtil removeGameDataUtil) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
         this.jwtTokenProvider = jwtTokenProvider;
         this.refreshTokenService = refreshTokenService;
         this.passwordEncoder = passwordEncoder;
+        this.removeGameDataUtil = removeGameDataUtil;
     }
 
     public void signupUser(SignUpRequestDTO signUpRequestDTO) {
@@ -51,6 +54,8 @@ public class AuthService {
             throw new AuthException(ErrorCode.INVALID_PASSWORD);
         }
 
+        removeGameDataByUser(user);
+
         String accessToken = jwtTokenProvider.generateAccessToken(user.getId(), user.getUserAccount());
         String refreshToken = jwtTokenProvider.generateRefreshToken(user.getId());
         refreshTokenService.saveRefreshToken(user, refreshToken);
@@ -62,5 +67,20 @@ public class AuthService {
     public void changePassword(User user, PasswordRequestDTO dto) {
         String encodedPassword = passwordEncoder.encode(dto.getPassword());
         user.updatePassword(encodedPassword);
+    }
+
+    private void removeGameDataByUser(User user) {
+        removeGameDataUtil.gameDateRemoveByTransaction(user);
+        removeGameDataUtil.gameDateRemoveByInterest(user);
+        removeGameDataUtil.gameDataRemoveByPossession(user);
+
+        removeGameDataUtil.gameDataRemoveByCurrentPrice(user);
+        removeGameDataUtil.gameDataRemoveByCompanyFinance(user);
+        removeGameDataUtil.gameDataRemoveByMacroIndicators(user);
+        removeGameDataUtil.gameDataRemoveByNews(user);
+        removeGameDataUtil.gameDataRemoveByReddit(user);
+        removeGameDataUtil.gameDataRemoveByTotalAnalysis(user);
+
+        removeGameDataUtil.gameDataRemoveByGameDate(user);
     }
 }

@@ -1,6 +1,5 @@
 package com.DahnTa.util;
 
-import com.DahnTa.entity.CurrentPrice;
 import com.DahnTa.entity.User;
 import com.DahnTa.repository.CompanyFinanceRepository;
 import com.DahnTa.repository.CurrentPriceRepository;
@@ -10,10 +9,8 @@ import com.DahnTa.repository.MacroIndicatorsRepository;
 import com.DahnTa.repository.NewsRepository;
 import com.DahnTa.repository.PossessionRepository;
 import com.DahnTa.repository.RedditRepository;
-import com.DahnTa.repository.StockRepository;
 import com.DahnTa.repository.TotalAnalysisRepository;
 import com.DahnTa.repository.TransactionRepository;
-import java.util.List;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 

@@ -10,11 +10,14 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.LocalDate;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.Setter;
 
 @Entity
 @Table(name = "news_tb")
 @Getter
+@AllArgsConstructor
 public class News {
 
     @Id
@@ -29,7 +32,7 @@ public class News {
     @Column(name = "date", nullable = false)
     private LocalDate date;
 
-    @Column(name = "content", nullable = false)
+    @Column(name = "content", nullable = false, columnDefinition = "MEDIUMTEXT")
     private String content;
 
     @Column(name = "user_id", nullable = false)
