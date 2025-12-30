@@ -14,4 +14,6 @@ public interface CompanyFinanceSaveRepository extends JpaRepository<CompanyFinan
 
     List<CompanyFinanceSave> findByDateBetween(LocalDate startDate, LocalDate endDate);
     Optional<CompanyFinanceSave> findByStockIdAndDate(Long stockId, LocalDate date);
+
+    Optional<CompanyFinanceSave> findFirstByStockIdAndDateLessThanEqualOrderByDateDesc(Long stockId, LocalDate date);
 }

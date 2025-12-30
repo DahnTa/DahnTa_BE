@@ -202,9 +202,8 @@ public class StockService {
 
     public StockResponse getStock(User user, Long stockId) {
         Stock stock = getStockByStockId(stockId);
-        System.out.println("stockId:" + stock.getId());
         LocalDate today = getToday(user);
-        System.out.println("today:" + today);
+
         CurrentPriceSave currentPrice = getCurrentPriceByStockAndDate(stock, today);
         GameDate gameDate = getGameDateByUser(user);
         List<MarketPrices> marketPrices = getMarketPricesUntilToday(stock, gameDate.getStartDate(), today);
@@ -386,27 +385,29 @@ public class StockService {
     }
 
     private NewsSave getNewsByStockAndDate(Stock stock, LocalDate date) {
-        return newsSaveRepository.findByStockIdAndDate(stock.getId(), date)
+        return newsSaveRepository.findFirstByStockIdAndDateLessThanEqualOrderByDateDesc(stock.getId(), date)
             .orElseThrow(() -> new StockException(ErrorCode.NEWS_NOT_FOUND));
     }
 
     private CompanyFinanceSave getCompanyFinanceByStockAndDate(Stock stock, LocalDate date) {
-        return companyFinanceSaveRepository.findByStockIdAndDate(stock.getId(), date)
+        return companyFinanceSaveRepository.findFirstByStockIdAndDateLessThanEqualOrderByDateDesc(stock.getId(), date)
             .orElseThrow(() -> new StockException(ErrorCode.COMPANY_FINANCE_NOT_FOUND));
     }
 
     private MacroIndicatorsSave getMacroIndicatorsByStockAndDate(LocalDate date) {
-        return macroIndicatorsSaveRepository.findByDate(date)
+        return macroIndicatorsSaveRepository.findFirstByDateLessThanEqualOrderByDateDesc(date)
             .orElseThrow(() -> new StockException(ErrorCode.MACRO_INDICATORS_NOT_FOUND));
     }
 
     private RedditSave getRedditByStockAndDate(Stock stock, LocalDate date) {
-        return redditSaveRepository.findByStockIdAndDate(stock.getId(), date)
+
+        return redditSaveRepository
+            .findFirstByStockIdAndDateLessThanEqualOrderByDateDesc(stock.getId(), date)
             .orElseThrow(() -> new StockException(ErrorCode.REDDIT_NOT_FOUND));
     }
 
     private TotalAnalysisSave getTotalAnalysisByStockAndDate(Stock stock, LocalDate date) {
-        return totalAnalysisSaveRepository.findByStockIdAndDate(stock.getId(), date)
+        return totalAnalysisSaveRepository.findFirstByStockIdAndDateLessThanEqualOrderByDateDesc(stock.getId(), date)
             .orElseThrow(() -> new StockException(ErrorCode.TOTAL_ANALYSIS_NOT_FOUND));
     }
 

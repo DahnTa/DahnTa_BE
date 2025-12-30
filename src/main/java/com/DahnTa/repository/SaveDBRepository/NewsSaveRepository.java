@@ -14,4 +14,6 @@ public interface NewsSaveRepository extends JpaRepository<NewsSave, Long> {
 
     List<NewsSave> findByDateBetween(LocalDate startDate, LocalDate endDate);
     Optional<NewsSave> findByStockIdAndDate(Long stockId, LocalDate date);
+
+    Optional<NewsSave> findFirstByStockIdAndDateLessThanEqualOrderByDateDesc(Long stockId, LocalDate date);
 }

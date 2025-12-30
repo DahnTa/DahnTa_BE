@@ -14,4 +14,6 @@ public interface RedditSaveRepository extends JpaRepository<RedditSave, Long> {
 
     List<RedditSave> findByDateBetween(LocalDate startDate, LocalDate endDate);
     Optional<RedditSave> findByStockIdAndDate(Long stockId, LocalDate date);
+
+    Optional<RedditSave> findFirstByStockIdAndDateLessThanEqualOrderByDateDesc(Long stockId, LocalDate date);
 }
