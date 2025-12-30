@@ -12,4 +12,6 @@ public interface MacroIndicatorsSaveRepository extends JpaRepository<MacroIndica
 
     List<MacroIndicatorsSave> findByDateBetween(LocalDate startDate, LocalDate endDate);
     Optional<MacroIndicatorsSave> findByDate(LocalDate date);
+
+    Optional<MacroIndicatorsSave> findFirstByDateLessThanEqualOrderByDateDesc(LocalDate date);
 }

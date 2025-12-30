@@ -14,4 +14,6 @@ public interface TotalAnalysisSaveRepository extends JpaRepository<TotalAnalysis
 
     List<TotalAnalysisSave> findByDateBetween(LocalDate startDate, LocalDate endDate);
     Optional<TotalAnalysisSave> findByStockIdAndDate(Long stockId, LocalDate date);
+
+    Optional<TotalAnalysisSave> findFirstByStockIdAndDateLessThanEqualOrderByDateDesc(Long stockId, LocalDate date);
 }

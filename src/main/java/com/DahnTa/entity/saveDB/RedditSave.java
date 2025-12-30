@@ -31,7 +31,7 @@ public class RedditSave {
     @Column(name = "date", nullable = false)
     private LocalDate date;
 
-    @Column(name = "title", nullable = false)
+    @Column(name = "title", nullable = false, columnDefinition = "MEDIUMTEXT")
     private String title;
 
     @Column(name = "content", nullable = false, columnDefinition = "MEDIUMTEXT")
